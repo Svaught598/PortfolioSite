@@ -1,0 +1,24 @@
+.particles > div {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    background-color: #e5e5f7;
+    opacity: 0.8;
+    background: 
+        linear-gradient(
+            135deg, 
+            #264653 0%, #264653 10%,
+            #275961 10%, #275961 20%,
+            #286065 20%, #286065 30%,
+            #28666A 30%, #28666A 40%,
+            #286D6F 40%, #286D6F 50%,
+            #287473 50%, #287473 60%,
+            #297B78 60%, #297B78 70%,
+            #29827C 70%, #29827C 80%,
+            #298981 80%, #298981 90%,
+            #298F86 90%, #298F86 100%
+        );
+    background-repeat: no-repeat;
+}
+
+
