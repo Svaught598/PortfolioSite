@@ -5,9 +5,9 @@ import Link from '../components/ui/Link.jsx'
 import CenterLayout from '../components/layout/CenterLayout.jsx'
 
 
-export default function Home(props) {
+export default function Home() {
   const entrance = "animate__animated animate__lightSpeedInLeft"
-  const delayEntrance = "animate__animated animate__lightSpeedInLeft animate__delay-2s"
+  const delayEntrance ="animate__animated animate__lightSpeedInLeft animate__delay-2s"
 
   return (
     <>
@@ -17,7 +17,7 @@ export default function Home(props) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <CenterLayout { ...props }>
+      <CenterLayout>
         <h1 className={"d-flex flex-column text-3 " + entrance}>
           <span>My Name is <span className="text-2">Steven Vaught.</span></span>
           <span>I am a <span className="text-4">Software Developer.</span></span>

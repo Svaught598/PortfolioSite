@@ -17,8 +17,7 @@ export default function Link({ content, destination, animated }) {
       <a
         onMouseOver={ (animated) ? beginAnimation : null }
         onMouseLeave={ (animated) ? stopAnimation : null }
-        className="link"
-      >
+        className="link">
           {content}
       </a>
     </NextLink>

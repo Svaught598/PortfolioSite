@@ -4,11 +4,10 @@ import Particles from 'react-particles-js'
 import styles from '../../styles/ParticleBackground.module.css'
 
 
-export default function ParticleBackground({ darkMode }) {
+export default function ParticleBackground() {
 
   return (
-    <div
-      className={ (darkMode) ? styles.particlesDark : styles.particlesLight }>
+    <div className={styles.particles}>
       <Particles
         params={{
           particles: {

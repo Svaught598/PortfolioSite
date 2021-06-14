@@ -4,7 +4,7 @@ import Head from 'next/head'
 import CenterLayout from '../components/layout/CenterLayout.jsx'
 
 
-export default function About(props) {
+export default function About() {
   const entrance = "animate__animated animate__lightSpeedInLeft"
   const delayEntrance ="animate__animated animate__lightSpeedInLeft animate__delay-2s"
 
@@ -16,7 +16,7 @@ export default function About(props) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <CenterLayout { ...props }>
+      <CenterLayout>
         <h1 className={"text-3 " + entrance}>
           I <span className="text-4">design</span> &amp; <span className="text-2 bold">build</span> software.
         </h1>
