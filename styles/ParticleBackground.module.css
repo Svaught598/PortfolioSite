@@ -1,4 +1,4 @@
-.particles > div {
+.particlesLight > div {
     width: 100%;
     height: 100%;
     position: fixed;
@@ -17,6 +17,29 @@
             #29827C 70%, #29827C 80%,
             #298981 80%, #298981 90%,
             #298F86 90%, #298F86 100%
+        );
+    background-repeat: no-repeat;
+}
+
+.particlesDark > div {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    background-color: #e5e5f7;
+    opacity: 0.8;
+    background: 
+        linear-gradient(
+            135deg, 
+            #000000 0%, #000000 10%,
+            #0E0E0E 10%, #0E0E0E 20%,
+            #1B1B1B 20%, #1B1B1B 30%,
+            #292929 30%, #292929 40%,
+            #363636 40%, #363636 50%,
+            #444444 50%, #444444 60%,
+            #525252 60%, #525252 70%,
+            #5F5F5F 70%, #5F5F5F 80%,
+            #6D6D6D 80%, #6D6D6D 90%,
+            #7A7A7A 90%, #7A7A7A 100%
         );
     background-repeat: no-repeat;
 }
