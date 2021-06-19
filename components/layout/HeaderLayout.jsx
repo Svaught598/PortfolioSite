@@ -1,9 +1,10 @@
 import React from 'react'
+import clsx from 'clsx';
 import Toggle from '../ui/Toggle.jsx'
 import Link from 'next/link'
 
 
-export default function Header({ darkBackground, setDarkBackground }) {
+export default function HeaderLayout({ darkBackground, setDarkBackground }) {
   
   function toggleBackground() {
     setDarkBackground(!darkBackground)
