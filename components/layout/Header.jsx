@@ -10,13 +10,14 @@ export default function Header({ darkBackground, setDarkBackground }) {
   }
 
   return (
-    <header className="container d-flex justify-content-between p-3">
+    <header className="mx-auto my-3 flex justify-between w-11/12 lg:w-11/12 xl:w-11/12">
       <Link href="/">
         <a className="logoFont">
-          <span className="text-2">S</span>
-          <span className="text-3">V</span>
+          <span className="text-2 text-5xl lg:text-6xl xl:text-6xl">S</span>
+          <span className="text-3 text-5xl lg:text-6xl xl:text-6xl">V</span>
         </a>
       </Link>
+
       <div className="mt-2">
         <Toggle
           value={darkBackground}

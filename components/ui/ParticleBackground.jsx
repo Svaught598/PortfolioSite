@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react'
-import Particles from 'react-particles-js'
+import React, { useState, useEffect } from 'react'
+import Particles, { ShapeType } from 'react-particles-js'
 
 import styles from '../../styles/ParticleBackground.module.css'
 
@@ -14,31 +14,51 @@ export default function ParticleBackground({ darkMode }) {
           particles: {
             number: {
               density: {
-                value: 80,
+                value: 20,
                 enable: true,
-                value_area: 400,
+                value_area: 600,
               }
+            },
+            color: {
+              value: darkMode ? '#FFFFFF' : '#e76f51'
             },
             shape: {
               stroke: {
-                width: 4,
-                color: '#e76f51',
+                width: darkMode ? 5 : 10,
+                color: darkMode ? '#FFFFFF' : '#e76f51',
               },
-              type: "polygon"
+              polygon: {
+                nb_sides: '7',
+              },
+              type: ShapeType.Circle
+            },
+            size: {
+              value: darkMode ? 5 : 15,
+              random: true,
+            },
+            opacity: {
+              anim: {
+                enable: false,
+              }
             },
             lineLinked: {
-              enable: true,
-              distance: 150,
+              enable: !darkMode,
+              distance: 200,
               color: '#f4a261',
+              warp: true,
             },
             move: {
               enable: true,
               random: true,
-              speed: 2,
+              speed: 1,
               outMode: 'bounce',
-            }
+            },
+          },
+          polygon: {
+            enable: true,
           }
-        }}
+        }
+      }
       />
     </div>
   )

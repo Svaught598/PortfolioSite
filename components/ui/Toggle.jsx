@@ -3,7 +3,7 @@ import styles from '../../styles/Toggle.module.css'
 
 export default function Toggle({ value, setValue}) {
 
-  function triggerToggle() {
+  const triggerToggle = () => {
     setValue(!value)
   }
 

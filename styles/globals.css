@@ -1,105 +1,108 @@
 :root {
-  /* Custom Theme Colors */
-  --charcoal: #264653ff;
-  --persian-green: #2a9d8fff;
-  --orange-yellow-crayola: #e9c46aff;
-  --sandy-brown: #f4a261ff;
-  --burnt-sienna: #e76f51ff;
+    /* Custom Theme Colors */
+    --charcoal: #264653ff;
+    --persian-green: #2a9d8fff;
+    --orange-yellow-crayola: #e9c46aff;
+    --sandy-brown: #f4a261ff;
+    --burnt-sienna: #e76f51ff;
 }
 
 @font-face {
-  font-family: 'amity_jackregular';
-  src:
-    url('../public/amity_jack-webfont.woff2') format('woff2'),
-    url('../public/amity_jack-webfont.woff') format('woff');
-  font-weight: normal;
-  font-style: normal;
+    font-family: 'amity_jackregular';
+    src: url('../public/amity_jack-webfont.woff2') format('woff2'), url('../public/amity_jack-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
 }
-
 
 html,
 body {
-  background: var(--charcoal) !important;
-  height: 100%;
-  padding: 0;
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+    background: var(--charcoal) !important;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
 }
 
 .main {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    width: 100%;
 }
 
 .centered {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-75%, -50%);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-75%, -50%);
 }
 
 .logoFont {
-  font-family: 'amity_jackregular', Arial, sans-serif;
-  font-weight: normal;
-  font-style: normal;
-  font-size: 3em;
-  font-style: normal;
-  text-decoration: none;
+    font-family: 'amity_jackregular', Arial, sans-serif;
+    font-weight: normal;
+    font-style: normal;
+    font-size: 3em;
+    font-style: normal;
+    text-decoration: none;
 }
 
 .bg-1 {
-  background-color: var(--charcoal);
+    background-color: var(--charcoal);
 }
 
 .bg-2 {
-  background-color: var(--persian-green);
+    background-color: var(--persian-green);
 }
 
 .bg-3 {
-  background-color: var(--orange-yellow-crayola);
+    background-color: var(--orange-yellow-crayola);
 }
 
 .bg-4 {
-  background-color: var(--sandy-brown);
+    background-color: var(--sandy-brown);
 }
 
 .bg-5 {
-  background-color: var(--burnt-sienna);
+    background-color: var(--burnt-sienna);
 }
 
 .text-1 {
-  color: var(--charcoal);
+    color: var(--charcoal);
 }
 
 .text-2 {
-  color: var(--persian-green);
+    color: var(--persian-green);
 }
 
 .text-3 {
-  color: var(--orange-yellow-crayola);
+    color: var(--orange-yellow-crayola);
 }
 
 .text-4 {
-  color: var(--sandy-brown);
+    color: var(--sandy-brown);
 }
 
 .text-5 {
-  color: var(--burnt-sienna);
+    color: var(--burnt-sienna);
 }
 
+
 /* Links */
+
 .link {
-  color: var(--burnt-sienna);
-  font-size: 3em;
-  font-style: normal;
-  font-weight: bolder;
-  text-decoration: none;
+    color: var(--burnt-sienna);
+    font-size: 3em;
+    font-style: normal;
+    font-weight: bolder;
+    text-decoration: none;
 }
 
 .link:hover {
-  color: var(--sandy-brown)
+    color: var(--sandy-brown)
+}
+
+.delay08 {
+    animation-delay: .4s
 }
