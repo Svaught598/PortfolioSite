@@ -25,13 +25,17 @@ export default function About(props) {
 
           <HeroLayout>
             <HeroHeader>
-              <span>I <span className="text-4">design</span> &amp; <span className="text-2 bold">build</span> software.</span>
+              <span><span className="text-2">About</span> Me.</span>
             </HeroHeader>
           </HeroLayout>
           
-          <div className={clsx("flex flex-col", delayEntrance)}>
+          <div className={clsx("flex flex-col space-y-10", delayEntrance)}>
             <p className="text-xl text-3">
-              I'm a software developer based in <span className="text-2">Phoenix AZ</span> working with modern web technologies. Currently, I'm an Accessibility Specialist at <a href="https://www.seewritehear.com/" target="_blank" className="text-4 link text-xl">SeeWriteHear</a> focused on building accessible, internal web-apps to improve workflow management.</p>
+              I'm a software developer based in <span className="text-2">Phoenix AZ</span> working with modern web technologies. Currently, I'm an Accessibility Specialist at <a href="https://www.seewritehear.com/" target="_blank" className="text-4 link text-xl">SeeWriteHear</a> focused on building accessible, internal web-apps to improve workflow management.
+            </p>
+            <p className="text-xl text-3">
+              Cool stuff I'm into includes (but is not limited to) Emulators, Math, and the area where they intersect: <a href="https://www.reddit.com/r/itrunsdoom/" className="text-5 link text-xl flex">All the places you can run Doom</a>
+            </p>
           </div>
         </main>
       </div>
