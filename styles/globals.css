@@ -41,6 +41,24 @@ body {
     text-decoration: none;
 }
 
+@media (min-width: 640px) {
+    .projectCard {
+        height: 24rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .projectCard {
+        height: 28rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .projectCard {
+        height: 30rem;
+    }
+}
+
 .bg-1 {
     background-color: var(--charcoal);
 }
@@ -98,4 +116,12 @@ body {
 
 .delay08 {
     animation-delay: .4s
+}
+
+.grow {
+    transition: all .4s ease-in-out;
+}
+
+.grow:hover {
+    transform: scale(1.05);
 }

@@ -1,13 +1,18 @@
 import React from 'react'
 import Head from 'next/head'
-import clsx from 'clsx';
+import { promises as fs } from 'fs'
+import path from 'path'
+import grayMatter from 'gray-matter'
 
-import CenterLayout from '../components/layout/CenterLayout.jsx'
+import HeaderLayout from 'components/layout/HeaderLayout.jsx';
+import { HeroLayout, HeroHeader } from 'components/layout/HeroLayout';
+import ProjectCard from 'components/layout/ProjectCard';
 
 
 export default function Projects(props) {
   const entrance = "animate__animated animate__lightSpeedInLeft"
   const delayEntrance ="animate__animated animate__lightSpeedInLeft animate__delay-1s"
+  const { projects } = props
 
   return (
     <>
@@ -17,18 +22,64 @@ export default function Projects(props) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <CenterLayout { ...props }>
-        <h1 
-          className={clsx(
-            "mb-5 text-3",
-            "text-2xl xs:text-3xl sm:text-5xl lg:text-6xl xl:text-8xl",
-            entrance
-          )}
-        >
-          Software I've <span className="text-2">built.</span>
-        </h1>
-        <p className={"h1 text-3 " + delayEntrance}>TODO: Build this page out.</p>
-      </CenterLayout>
+      <div className="main container mx-auto w-75">
+        <HeaderLayout { ...props } />
+        <main className="xl:my-72 w-11/12 mx-auto">
+
+          <HeroLayout>
+            <HeroHeader>
+              <span>Some things I've <span className="text-2">built...</span></span>
+            </HeroHeader>
+          </HeroLayout>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-10">
+            { projects.map(project => {
+              return (
+                <div key={ project.title }>
+                  <a>
+                    <ProjectCard { ...project } />
+                  </a>
+                </div>
+              )
+            })}
+          </div>
+        </main>
+      </div>
     </>
   )
 }
+
+
+export async function getStaticProps() {
+  const projectsDir = path.join(process.cwd(), 'pages/projects');
+  const filenames = await fs.readdir(projectsDir)
+
+  const files = await Promise.all(filenames.map(async filename => {
+    const filePath = path.join(projectsDir, filename);
+    const content = await fs.readFile(filePath, 'utf8');
+    const matter = grayMatter(content);
+    return {
+      filename, 
+      matter
+    }
+  }))
+
+  const projects = files.map(file => {
+    return {
+      path: `/projects/${file.filename.replace('.mdx', '')}`,
+      title: file.matter.data.title,
+      description: file.matter.data.description,
+      githubLink: file.matter.data.githubLink,
+      imageLink: file.matter.data.imageLink,
+    }
+  })
+
+  console.log(projects[0].path)
+
+  return {
+    props: {
+      projects,
+    }
+  }
+}
+
