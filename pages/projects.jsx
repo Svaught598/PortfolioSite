@@ -74,8 +74,6 @@ export async function getStaticProps() {
     }
   })
 
-  console.log(projects[0].path)
-
   return {
     props: {
       projects,
