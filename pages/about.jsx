@@ -8,7 +8,6 @@ import Link from 'components/ui/Link';
 
 
 export default function About(props) {
-  
   const delayEntrance ="animate__animated animate__lightSpeedInLeft animate__delay-1s"
 
   return (
@@ -21,7 +20,7 @@ export default function About(props) {
 
       <div className="main container mx-auto w-75">
         <HeaderLayout { ...props } />
-        <main className="xl:my-72 w-11/12 mx-auto">
+        <main className="xl:my-72  w-6/12 mx-auto">
 
           <HeroLayout>
             <HeroHeader>
@@ -30,7 +29,7 @@ export default function About(props) {
           </HeroLayout>
           
           <div className={clsx("flex flex-col space-y-10", delayEntrance)}>
-            <p className="text-xl text-3">
+            <p className="text-xl text-3 w-50 mx-auto">
               I'm a software developer based in <span className="text-2">Phoenix AZ</span> working with modern web technologies. Currently, I'm an Accessibility Specialist at <a href="https://www.seewritehear.com/" target="_blank" className="text-4 link-xl">SeeWriteHear</a> focused on building accessible, internal web-apps to improve workflow management.
             </p>
             <p className="text-xl text-3">

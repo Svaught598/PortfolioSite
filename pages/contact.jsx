@@ -1,13 +1,11 @@
 import React from 'react'
 import Head from 'next/head'
-import clsx from 'clsx';
 
-import CenterLayout from '../components/layout/CenterLayout.jsx'
+import HeaderLayout from 'components/layout/HeaderLayout'
+import { HeroLayout, HeroHeader } from 'components/layout/HeroLayout'
 
 
 export default function Contact(props) {
-  const entrance = "animate__animated animate__lightSpeedInLeft"
-  const delayEntrance ="animate__animated animate__lightSpeedInLeft animate__delay-1s"
 
   return (
     <>
@@ -17,18 +15,17 @@ export default function Contact(props) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <CenterLayout { ...props }>
-        <h1 
-          className={clsx(
-            "mb-5 text-3",
-            "text-2xl xs:text-3xl sm:text-5xl lg:text-6xl xl:text-8xl",
-            entrance
-          )}
-        >
-        <span className="text-2">Reach out</span> to me.
-        </h1>
-        <p className={"h1 text-3 " + delayEntrance}>TODO: Build this page out.</p>
-      </CenterLayout>
+      <div className="main container mx-auto w-75">
+        <HeaderLayout { ...props } />
+        <main className="xl:my-72  w-6/12 mx-auto">
+
+          <HeroLayout>
+            <HeroHeader>
+              <span><span className="text-2">Reach out</span> to me.</span>
+            </HeroHeader>
+          </HeroLayout>
+        </main>
+      </div>
     </>
   )
 }
