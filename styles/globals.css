@@ -114,6 +114,18 @@ body {
     color: var(--sandy-brown)
 }
 
+.link-xl {
+    color: var(--burnt-sienna);
+    font-size: 1.25rem;
+    font-style: normal;
+    font-weight: bolder;
+    text-decoration: none;
+}
+
+.link-xl:hover {
+    color: var(--sandy-brown)
+}
+
 .delay08 {
     animation-delay: .4s
 }

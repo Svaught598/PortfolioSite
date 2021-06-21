@@ -8,7 +8,8 @@ module.exports = composePlugins([
         layoutPath: './layouts'
     }),
     optimizedImages, {
-        optimizeImagesInDev: true
+        optimizeImagesInDev: true,
+        imagesPublicPath: `/nextsite/_next/static/images/`,
     }
 ], {
     /* Normal JS Config*/
