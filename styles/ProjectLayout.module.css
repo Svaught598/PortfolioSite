@@ -1,0 +1,10 @@
+.content {}
+
+.content p {
+    @apply my-5
+}
+
+.content h2 {
+    @apply my-5 text-4xl;
+    font-weight: bolder;
+}
