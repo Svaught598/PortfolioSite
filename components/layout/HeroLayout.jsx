@@ -7,7 +7,7 @@ export function HeroLayout(props) {
     <div
       className={clsx(
         "flex justify-center flex-col h-full",
-        "my-12 xl:my-24",
+        "my-8 xl:my-24",
       )}
     >
       { props.children }
@@ -21,7 +21,7 @@ export function HeroHeader(props) {
   return (
     <h1
       className={clsx(
-        "flex flex-col mb-5 text-3",
+        "flex flex-col mb-5 text-3 font-extrabold",
         "text-2xl xs:text-3xl sm:text-3xl md:text-4xl lg:text-6xl xl:text-6xl",
         entrance
       )}

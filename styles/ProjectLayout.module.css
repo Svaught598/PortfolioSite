@@ -5,6 +5,6 @@
 }
 
 .content h2 {
-    @apply my-5 text-4xl;
+    @apply my-5 text-2xl font-extrabold;
     font-weight: bolder;
 }

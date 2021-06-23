@@ -10,16 +10,25 @@ export default function ProjectLayout({ children, frontMatter }) {
       <div className="main container mx-auto w-75">
         <HeaderLayout />
         <main className="xl:my-72 w-11/12 mx-auto">
+          <article>
+            <HeroLayout>
+              <HeroHeader>
+                <span>{ frontMatter.title }</span>
+              </HeroHeader>
+            </HeroLayout>
 
-          <HeroLayout>
-            <HeroHeader>
-              <span>{ frontMatter.title }</span>
-            </HeroHeader>
-          </HeroLayout>
+            <div className="max-h-64 mx-auto mb-5">
+              <img
+                className="max-h-full rounded-xl rounded-tr-xl max-h-full min-h-full object-scale-down"
+                src={ require(`../public${ frontMatter.imageLink }`)}
+                width="330" height="250"
+              />
+            </div>
 
-          <div className={clsx("text-3 text-xl", styles.content)}>
-            { children }
-          </div>
+            <div className={clsx("text-3 text-xl w-full md:w-9/12 mx-auto", styles.content)}>
+              { children }
+            </div>
+          </article>
         </main>
       </div>
     )
