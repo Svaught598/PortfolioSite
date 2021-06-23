@@ -17,7 +17,7 @@ export default function Blog(props) {
 
       <div className="main container mx-auto w-75">
         <HeaderLayout { ...props } />
-        <main className="xl:my-72  w-6/12 mx-auto">
+        <main className="xl:my-72 w-11/12 md:w-6/12 mx-auto">
 
           <HeroLayout>
             <HeroHeader>
