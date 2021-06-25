@@ -20,7 +20,7 @@ export default function Link({ content, destination, animated }) {
           "link my-0", 
           "leading-normal lg:leading-normal xl:leading-normal",
           "text-5xl lg:text-5xl xl:text-7xl",
-          animated && mouseOver && "animate__animated animate__jello",
+          animated && mouseOver && "animate__animated animate__headShake",
         )}
       >
           {content}

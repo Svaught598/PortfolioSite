@@ -14,18 +14,18 @@ export default function ParticleBackground({ darkMode }) {
           particles: {
             number: {
               density: {
-                value: 20,
+                value: darkMode ? 5 : 20,
                 enable: true,
                 value_area: 600,
               }
             },
             color: {
-              value: darkMode ? '#FFFFFF' : '#e76f51'
+              value: darkMode ? '#444444' : '#e76f51'
             },
             shape: {
               stroke: {
                 width: darkMode ? 5 : 10,
-                color: darkMode ? '#FFFFFF' : '#e76f51',
+                color: darkMode ? '#454545' : '#e76f51',
               },
               polygon: {
                 nb_sides: '7',

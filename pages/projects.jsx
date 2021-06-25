@@ -24,7 +24,7 @@ export default function Projects(props) {
 
       <div className="main container mx-auto w-75">
         <HeaderLayout { ...props } />
-        <main className="xl:my-72 w-11/12 mx-auto">
+        <main className="w-11/12 mx-auto h-50">
 
           <HeroLayout>
             <HeroHeader>
