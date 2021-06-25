@@ -1,17 +1,20 @@
 import React from 'react'
 import styles from '../../styles/Toggle.module.css'
+import { str2bool } from '../../utils';
+
+
 
 export default function Toggle({ value, setValue}) {
   const handleChange = (e) => {
-    setValue(e.target.value)
-    console.log("changed, new value: ", value, e)
+    let newVal = str2bool(e.target.checked)
+    setValue(newVal)
+    console.log("changed, new value: ", value, newVal)
   };
-  console.log("created", value)
-
+  
   return (
     <label className={ styles.switch }>
-      <input value={ value } onChange={ handleChange } type="checkbox" />
-      <span className={styles.slider}></span>
+      <input checked={ value } onChange={ handleChange } type="checkbox" />
+      <span className={ styles.slider }></span>
     </label>
   )
 }

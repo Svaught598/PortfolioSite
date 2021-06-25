@@ -4,11 +4,12 @@ import clsx from 'clsx';
 
 import styles from '../styles/ProjectLayout.module.css'
 
-export default function ProjectLayout({ children, frontMatter }) {
+export default function ProjectLayout(props) {
+  let { children, frontMatter } = props
 
     return (
       <div className="main container mx-auto w-75">
-        <HeaderLayout />
+        <HeaderLayout { ...props } />
         <main className="xl:my-72 w-11/12 mx-auto">
           <article>
             <HeroLayout>

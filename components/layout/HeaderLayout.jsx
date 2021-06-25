@@ -5,10 +5,6 @@ import Link from 'next/link'
 
 
 export default function HeaderLayout({ darkBackground, setDarkBackground }) {
-  
-  function toggleBackground() {
-    setDarkBackground(!darkBackground)
-  }
 
   return (
     <header className="mx-auto my-3 flex justify-between w-11/12 lg:w-11/12 xl:w-11/12">
