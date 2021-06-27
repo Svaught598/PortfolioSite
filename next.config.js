@@ -13,7 +13,7 @@ module.exports = composePlugins([
     }
 ], {
     /* Normal JS Config*/
-    basePath: '/nextsite',
+    // basePath: '/nextsite',
     images: {
         domains: ["github.com"],
     },

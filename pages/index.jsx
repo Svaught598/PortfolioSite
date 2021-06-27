@@ -8,7 +8,7 @@ import { HeroLayout, HeroHeader } from 'components/layout/HeroLayout.jsx';
 
 
 export default function Home(props) {
-  const delayEntrance = "animate__animated animate__lightSpeedInLeft animate__delay-1s"
+  const delayEntrance = "animate__animated animate__fadeInUp delay04"
   
   return (
     <>
@@ -23,8 +23,8 @@ export default function Home(props) {
         <main className="w-11/12 mx-auto h-50">
           <HeroLayout>
             <HeroHeader>
-              <span>My Name is <span className="text-2">Steven Vaught.</span></span>
-              <span>I am a <span className="text-4">Software Developer.</span></span>
+              <span>My Name is <span className="text-persian-green">Steven Vaught.</span></span>
+              <span>I am a <span className="text-sandy-brown">Software Developer.</span></span>
             </HeroHeader>
 
             <nav className={clsx("flex flex-col", delayEntrance)}>

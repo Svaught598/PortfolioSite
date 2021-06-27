@@ -6,12 +6,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 
 export default function ProjectCard(props) {
-  const {title, description, imageLink, githubLink, path} = props
+  const {title, description, imageLink, githubLink, path, darkMode} = props
 
-  const cardClass = clsx(
-    "bg-1 shadow-2xl rounded-xl flex flex-col justify-between",
-    "grow projectCard"
-  )
+  const cardClass = (darkMode)
+    ? clsx(
+      "bg-gray shadow-2xl rounded-xl flex flex-col justify-between",
+      "grow projectCard")
+    : clsx(
+      "bg-charcoal shadow-2xl rounded-xl flex flex-col justify-between",
+      "grow projectCard")
 
   return (
     <div className={ cardClass }>
@@ -26,7 +29,7 @@ export default function ProjectCard(props) {
 
         <div className="flex justify-between">
           <Link href={ path }>
-            <a className="text-3 text-xl xl:text-4xl p-3">{ title }</a>
+            <a className="text-orange-yellow-crayola text-xl xl:text-4xl p-3">{ title }</a>
           </Link>
           <a href={ githubLink } className="xl:max-h-10 md:max-h-8 max-h-8 m-3 w-10">
             <FontAwesomeIcon icon={ faGithub } className="h-full" fill="black"/>
@@ -35,7 +38,7 @@ export default function ProjectCard(props) {
       </div>
 
       <div>
-        <p className="text-3 text-md xl:text-2xl px-3 pb-3">{ description }</p>
+        <p className="text-orange-yellow-crayola text-md xl:text-2xl px-3 pb-3">{ description }</p>
       </div>
     </div>
   )

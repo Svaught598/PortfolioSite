@@ -11,7 +11,7 @@ import ProjectCard from 'components/layout/ProjectCard';
 
 export default function Projects(props) {
   const entrance = "animate__animated animate__lightSpeedInLeft"
-  const delayEntrance ="animate__animated animate__lightSpeedInLeft animate__delay-1s"
+  const delayEntrance ="animate__animated animate__fadeInUp delay04"
   const { projects } = props
 
   return (
@@ -28,16 +28,16 @@ export default function Projects(props) {
 
           <HeroLayout>
             <HeroHeader>
-              <span>Some things I've <span className="text-2">built...</span></span>
+              <span>Some things I've <span className="text-persian-green">built...</span></span>
             </HeroHeader>
           </HeroLayout>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-10">
             { projects.map(project => {
               return (
-                <div key={ project.title }>
+                <div key={ project.title } className={ delayEntrance }>
                   <a>
-                    <ProjectCard { ...project } />
+                    <ProjectCard { ...project } darkMode={ props.darkBackground }/>
                   </a>
                 </div>
               )

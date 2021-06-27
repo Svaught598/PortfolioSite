@@ -8,8 +8,12 @@ import Link from 'components/ui/Link';
 
 
 export default function About(props) {
-  const delayEntrance ="animate__animated animate__lightSpeedInLeft animate__delay-1s"
-
+  const delayEntrance ="animate__animated animate__fadeInUp delay04"
+  const darkMode = props.darkBackground
+  const card = (darkMode) 
+    ? 'bg-gray color-transition'
+    : 'bg-charcoal color-transition'
+  console.log(darkMode)
   return (
     <>
       <Head>
@@ -24,16 +28,16 @@ export default function About(props) {
 
           <HeroLayout>
             <HeroHeader>
-              <span><span className="text-2">About</span> Me.</span>
+              <span><span className="text-persian-green">About</span> Me.</span>
             </HeroHeader>
           </HeroLayout>
           
-          <div className={clsx("flex flex-col space-y-10", delayEntrance)}>
-            <p className="text-xl text-3 w-50 mx-auto">
-              I'm a software developer based in <span className="text-2">Phoenix AZ</span> working with modern web technologies. Currently, I'm an Accessibility Specialist at <a href="https://www.seewritehear.com/" target="_blank" className="text-4 link-xl">SeeWriteHear</a> focused on building accessible, internal web-apps to improve workflow management.
+          <div className={clsx("flex flex-col space-y-10 p-5 mb-5 rounded-xl shadow-xl", card, delayEntrance)}>
+            <p className="text-xl text-orange-yellow-crayola w-50 mx-auto">
+              I'm a software developer based in <span className="text-persian-green">Phoenix AZ</span> working with modern web technologies. Currently, I'm an Accessibility Specialist at <a href="https://www.seewritehear.com/" target="_blank" className="text-burnt-sienna link-xl">SeeWriteHear</a> focused on building accessible, internal web-apps to improve workflow management.
             </p>
-            <p className="text-xl text-3">
-              Cool stuff I'm into includes (but is not limited to) Emulators, Math, and the area where they intersect: <a href="https://www.reddit.com/r/itrunsdoom/" className="text-5 link-xl flex">All the places you can run Doom</a>
+            <p className="text-xl text-orange-yellow-crayola">
+              Cool stuff I'm into includes (but is not limited to) Emulators, Math, and the area where they intersect: <a href="https://www.reddit.com/r/itrunsdoom/" className="text-burnt-sienna link-xl flex-inline">All the places you can run Doom</a>
             </p>
           </div>
         </main>

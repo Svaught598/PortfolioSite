@@ -1,10 +1,10 @@
 :root {
     /* Custom Theme Colors */
-    --charcoal: #264653ff;
+    /* --charcoal: #264653ff;
     --persian-green: #2a9d8fff;
     --orange-yellow-crayola: #e9c46aff;
     --sandy-brown: #f4a261ff;
-    --burnt-sienna: #e76f51ff;
+    --burnt-sienna: #e76f51ff; */
 }
 
 @font-face {
@@ -16,7 +16,6 @@
 
 html,
 body {
-    background: var(--charcoal) !important;
     height: 100%;
     padding: 0;
     margin: 0;
@@ -53,63 +52,22 @@ body {
     }
 }
 
-.bg-1 {
-    background-color: var(--charcoal);
-}
-
-.bg-2 {
-    background-color: var(--persian-green);
-}
-
-.bg-3 {
-    background-color: var(--orange-yellow-crayola);
-}
-
-.bg-4 {
-    background-color: var(--sandy-brown);
-}
-
-.bg-5 {
-    background-color: var(--burnt-sienna);
-}
-
-.text-1 {
-    color: var(--charcoal);
-}
-
-.text-2 {
-    color: var(--persian-green);
-}
-
-.text-3 {
-    color: var(--orange-yellow-crayola);
-}
-
-.text-4 {
-    color: var(--sandy-brown);
-}
-
-.text-5 {
-    color: var(--burnt-sienna);
-}
-
 
 /* Links */
 
 .link {
-    color: var(--burnt-sienna);
-    font-size: 3em;
+    @apply text-burnt-sienna;
     font-style: normal;
     font-weight: bolder;
     text-decoration: none;
 }
 
 .link:hover {
-    color: var(--sandy-brown)
+    @apply text-sandy-brown;
 }
 
 .link-xl {
-    color: var(--burnt-sienna);
+    @apply text-burnt-sienna;
     font-size: 1.25rem;
     font-style: normal;
     font-weight: bolder;
@@ -117,11 +75,15 @@ body {
 }
 
 .link-xl:hover {
-    color: var(--sandy-brown)
+    @apply text-sandy-brown;
 }
 
-.delay08 {
+.delay04 {
     animation-delay: .4s
+}
+
+.color-transition {
+    transition: all .4s ease-in-out;
 }
 
 .grow {

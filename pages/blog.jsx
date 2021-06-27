@@ -6,7 +6,8 @@ import { HeroLayout, HeroHeader } from 'components/layout/HeroLayout';
 
 
 export default function Blog(props) {
-
+  const delayEntrance ="animate__animated animate__fadeInUp delay04"
+  
   return (
     <>
       <Head>
@@ -21,7 +22,7 @@ export default function Blog(props) {
 
           <HeroLayout>
             <HeroHeader>
-              <span>Articles I've <span className="text-2">written.</span></span>
+              <span>Articles I've <span className="text-persian-green">written.</span></span>
             </HeroHeader>
           </HeroLayout>
         </main>

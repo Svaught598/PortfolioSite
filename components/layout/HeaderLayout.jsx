@@ -10,8 +10,8 @@ export default function HeaderLayout({ darkBackground, setDarkBackground }) {
     <header className="mx-auto my-3 flex justify-between w-11/12 lg:w-11/12 xl:w-11/12">
       <Link href="/">
         <a className="logoFont">
-          <span className="text-2 text-5xl lg:text-6xl xl:text-6xl">S</span>
-          <span className="text-3 text-5xl lg:text-6xl xl:text-6xl">V</span>
+          <span className="text-persian-green text-5xl lg:text-6xl xl:text-6xl">S</span>
+          <span className="text-orange-yellow-crayola text-5xl lg:text-6xl xl:text-6xl">V</span>
         </a>
       </Link>
 

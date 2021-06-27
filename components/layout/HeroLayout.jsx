@@ -16,12 +16,12 @@ export function HeroLayout(props) {
 }
 
 export function HeroHeader(props) {
-  const entrance = "animate__animated animate__lightSpeedInLeft"
+  const entrance = "animate__animated animate__flipInX"
 
   return (
     <h1
       className={clsx(
-        "flex flex-col mb-5 text-3 font-extrabold",
+        "flex flex-col mb-5 text-orange-yellow-crayola font-extrabold",
         "text-2xl xs:text-3xl sm:text-3xl md:text-4xl lg:text-6xl xl:text-6xl",
         entrance
       )}

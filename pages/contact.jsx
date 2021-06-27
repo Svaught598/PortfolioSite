@@ -6,6 +6,7 @@ import { HeroLayout, HeroHeader } from 'components/layout/HeroLayout'
 
 
 export default function Contact(props) {
+  const delayEntrance ="animate__animated animate__fadeInUp delay04"
 
   return (
     <>
@@ -21,7 +22,7 @@ export default function Contact(props) {
 
           <HeroLayout>
             <HeroHeader>
-              <span><span className="text-2">Reach out</span> to me.</span>
+              <span><span className="text-persian-green">Reach out</span> to me.</span>
             </HeroHeader>
           </HeroLayout>
         </main>
