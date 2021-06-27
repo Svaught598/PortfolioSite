@@ -94,3 +94,7 @@ body {
 .grow:hover {
     transform: scale(1.05);
 }
+
+.orange-on-hover:hover {
+    @apply bg-sandy-brown;
+}

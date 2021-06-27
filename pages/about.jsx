@@ -1,10 +1,11 @@
 import React from 'react'
 import Head from 'next/head'
+import Link from 'next/link';
 import clsx from 'clsx';
 
 import { HeroLayout, HeroHeader } from 'components/layout/HeroLayout';
 import HeaderLayout from 'components/layout/HeaderLayout';
-import Link from 'components/ui/Link';
+
 
 
 export default function About(props) {
@@ -13,7 +14,7 @@ export default function About(props) {
   const card = (darkMode) 
     ? 'bg-gray color-transition'
     : 'bg-charcoal color-transition'
-  console.log(darkMode)
+
   return (
     <>
       <Head>
@@ -37,7 +38,13 @@ export default function About(props) {
               I'm a software developer based in <span className="text-persian-green">Phoenix AZ</span> working with modern web technologies. Currently, I'm an Accessibility Specialist at <a href="https://www.seewritehear.com/" target="_blank" className="text-burnt-sienna link-xl">SeeWriteHear</a> focused on building accessible, internal web-apps to improve workflow management.
             </p>
             <p className="text-xl text-orange-yellow-crayola">
-              Cool stuff I'm into includes (but is not limited to) Emulators, Math, and the area where they intersect: <a href="https://www.reddit.com/r/itrunsdoom/" className="text-burnt-sienna link-xl flex-inline">All the places you can run Doom</a>
+              Cool stuff I'm into includes (but is not limited to) Emulators, Math, and the area where they intersect: <a href="https://www.reddit.com/r/itrunsdoom/" target="_blank" className="text-burnt-sienna link-xl">All the places you can run Doom</a>
+            </p>
+            <p className="text-xl text-orange-yellow-crayola">
+              I mostly work with <a href="https://vuejs.org/" target="_blank" className="text-persian-green link-xl">Vue.js</a> &amp; <a href="https://www.djangoproject.com/" target="_blank" className="text-persian-green link-xl">Django</a> day-to-day, but love learning new things in my free time. I really like <a href="https://reactjs.org/" target="_blank" className="text-persian-green link-xl">React</a>.
+            </p>
+            <p className="text-xl text-orange-yellow-crayola">
+              Here's my <a className="text-burnt-sienna link-xl">most recent resume</a>. <span>You can find more information about <Link href={ "/contact" }><a className="text-burnt-sienna link-xl"> how to get in touch with me </a></Link> here.</span>
             </p>
           </div>
         </main>
