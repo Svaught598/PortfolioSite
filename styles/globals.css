@@ -98,3 +98,7 @@ body {
 .orange-on-hover:hover {
     @apply bg-sandy-brown;
 }
+
+.underline {
+    text-decoration: underline;
+}

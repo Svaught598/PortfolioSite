@@ -17,6 +17,7 @@ export default function ProjectCard(props) {
       "grow projectCard")
 
   return (
+    <a href={ path }>
     <div className={ cardClass }>
       <div>
         <div className="h-80">
@@ -31,7 +32,7 @@ export default function ProjectCard(props) {
           <Link href={ path }>
             <a className="text-orange-yellow-crayola text-xl xl:text-4xl p-3">{ title }</a>
           </Link>
-          <a href={ githubLink } className="xl:max-h-10 md:max-h-8 max-h-8 m-3 w-10">
+          <a href={ githubLink } className="xl:max-h-10 md:max-h-8 max-h-8 m-3 w-10 z-50">
             <FontAwesomeIcon icon={ faGithub } className="h-full" fill="black"/>
           </a>
         </div>
@@ -41,5 +42,6 @@ export default function ProjectCard(props) {
         <p className="text-orange-yellow-crayola text-md xl:text-2xl px-3 pb-3">{ description }</p>
       </div>
     </div>
+    </a>
   )
 }

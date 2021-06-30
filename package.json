@@ -20,6 +20,7 @@
         "bootstrap": "^5.0.0-beta3",
         "clsx": "^1.1.1",
         "gray-matter": "^4.0.3",
+        "highlight.js": "^11.0.1",
         "image-trace-loader": "^1.0.2",
         "imagemin-gifsicle": "^7.0.0",
         "imagemin-mozjpeg": "^9.0.0",
