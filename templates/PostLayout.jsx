@@ -3,7 +3,7 @@ import clsx from 'clsx';
 
 import HeaderLayout from "components/layout/HeaderLayout"
 import { HeroHeader, HeroLayout } from "components/layout/HeroLayout"
-import styles from '../styles/ProjectLayout.module.css'
+import styles from '../styles/BlogLayout.module.css'
 
 export default function ProjectLayout(props) {
   let { children, frontMatter, darkBackground } = props

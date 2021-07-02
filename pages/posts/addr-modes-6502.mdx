@@ -4,6 +4,8 @@ description: "Everything I've discovered about the addressing modes of the 6502 
 
 layout: 'PostLayout'
 ---
+import CodeBlock from 'components/layout/CodeBlock'
+
 ## Flappy Bird - SNES Edition
 It was probably about a year ago when I learned that it was possible to inject code into the SNES by manipulating CPU registers with complex actions in Super Mario World. It is insane that someone was able to (recreate Flappy Bird in SMW)[https://www.youtube.com/watch?v=hB6eY73sLV0] reusing assets from the the original game. You read that right. Go watch the video, it’s awesome. I had to learn more about this stuff. Who wouldn’t want to know how Flappy Bird was successfully injected into a 1990 title with *nothing but a controller*? That stuff is interesting, but SNES is a huge undertaking for a first emulator, so I opted to build the much friendlier father: the NES. I plan on writing a few posts to detail areas I found confusing. Maybe some more documentation on this stuff out there will prevent the all-too common questions of “Why is flag 4 always set?” and “Why does the stack pointer start at 0xFD” from popping up on r/EmuDev. Questions like these actually have incredibly straightforward answers, but the absolute mass of confusing documentation makes it hard to pin down something tangible. My goal here is to create a documentation akin to the (6502 Documentation at obelisk.me.uk)[http://www.obelisk.me.uk/6502/reference.html] strictly for areas I found confusing. And it’s not like the documentation was bad! It just seems like most of it is meant as a reference for writing 6502 assembly, not for writing something that will read 6502 bytecode.
 
@@ -52,8 +54,22 @@ Opcode	Next Byte	Y Register	Target Address
 ## Absolute
 Absolute addressing takes the two bytes after the opcode and use them to construct a target address. The first byte is the lower byte, and the second byte is the higher byte.
 
-Opcode	Lower Byte	Upper Byte	Target Address
-0xED (SBC)	0xB3	0x21	0x21B3
+<table>
+    <tr>
+        <th>Opcode</th>
+        <th>Lower Byte</th>
+        <th>Upper Byte</th>
+        <th>Target Address</th>
+    </tr>
+    <tr>
+        <td>0xED (SBC)</td>
+        <td>0xB3</td>
+        <td>0x21</td>
+        <td>0x21B3</td>
+    </tr>
+</table>
+			
+			
 
 ## Absolute, X & Absolute Y
 These two addressing modes are so similar they might as well be the same. Both of them find the Absolute Target Address (detailed just above) and add either register X or Y to it.
@@ -81,6 +97,9 @@ Opcode	Next Byte	Zero Page	Target Lower Byte	Target Upper Byte
 
 ## Sample Code
 Below are my implementations of these addressing modes in C++. I chose to treat each mode as a function that returns the target address and have handling of reading/writing local to the opcode function.
+
+
+<CodeBlock lang="C++" />
 
 ```
 // Immediate
