@@ -18,6 +18,8 @@ export default function ProjectLayout(props) {
           <HeroLayout>
             <HeroHeader>
               <span>{ frontMatter.title }</span>
+              <span className="flex text-base mt-5">By { frontMatter.author }</span>
+              <span className="flex text-base">{ frontMatter.date }</span>
             </HeroHeader>
           </HeroLayout>
 

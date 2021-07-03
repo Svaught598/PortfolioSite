@@ -6,6 +6,8 @@ module.exports = {
             colors: {
                 'charcoal': '#264653ff',
                 'charcoal-light': '#286065',
+                'charcoal-lighter': '#257575',
+                
                 'persian-green': '#2a9d8fff',
                 'orange-yellow-crayola': '#e9c46aff',
                 'sandy-brown': '#f4a261ff',

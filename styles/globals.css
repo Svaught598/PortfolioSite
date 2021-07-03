@@ -1,12 +1,3 @@
-:root {
-    /* Custom Theme Colors */
-    /* --charcoal: #264653ff;
-    --persian-green: #2a9d8fff;
-    --orange-yellow-crayola: #e9c46aff;
-    --sandy-brown: #f4a261ff;
-    --burnt-sienna: #e76f51ff; */
-}
-
 @font-face {
     font-family: 'amity_jackregular';
     src: url('../public/amity_jack-webfont.woff2') format('woff2'), url('../public/amity_jack-webfont.woff') format('woff');

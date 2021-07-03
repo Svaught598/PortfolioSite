@@ -1,10 +1,58 @@
-.content {}
+.content {
+    @apply text-base md:text-xl lg:mx-9;
+
+}
 
 .content p {
-    @apply my-5 text-base md: text-xl;
+    @apply my-5 text-base md:text-xl;
 }
 
 .content h2 {
-    @apply my-5 text-2xl md: text-3xl font-extrabold;
+    @apply my-5 text-2xl md:text-3xl font-extrabold;
     font-weight: bolder;
+}
+
+.content div {
+    overflow-x: auto;
+}
+
+.content table {
+    @apply bg-charcoal-light mx-auto;
+    border-collapse:collapse;
+    border: 1px solid;
+    
+}
+
+.content table tr {
+    border-top: 1px solid;
+}
+
+.content table tr:first-child {
+    border: none;
+}
+
+.content table tr th {
+    @apply text-left text-base w-28 p-2;
+    min-width: 7rem;
+}
+
+.content table tr td {
+    @apply text-left text-base w-28 p-2;
+    min-width: 7rem;
+}
+
+.content table tr td:nth-child(2n-1),
+.content table tr th:nth-child(2n-1) {
+    @apply bg-charcoal-lighter;
+}
+
+.content pre code {
+    @apply text-base md:text-xl
+}
+
+.content ol,
+.content ul {
+    list-style: decimal;
+    margin: 0;
+    padding-left: 1rem;
 }
