@@ -70,10 +70,10 @@ export default function Contact(props) {
             </form>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <IconLink destination="https://www.linkedin.com/in/steven-vaught/" icon={ faLinkedin } darkMode={ darkMode }/>
-              <IconLink destination="https://github.com/svaught598/" icon={ faGithub } darkMode={ darkMode }/>
-              <IconLink destination="https://twitter.com/TrashmanSteve" icon={ faTwitter } darkMode={ darkMode }/>
-              <IconLink destination="https://discord.com/users/379666614204891137/" icon={ faDiscord } darkMode={ darkMode }/>
+              <IconLink destination="https://www.linkedin.com/in/steven-vaught/" target="_blank" icon={ faLinkedin } darkMode={ darkMode }/>
+              <IconLink destination="https://github.com/svaught598/" target="_blank" icon={ faGithub } darkMode={ darkMode }/>
+              <IconLink destination="https://twitter.com/TrashmanSteve" target="_blank" icon={ faTwitter } darkMode={ darkMode }/>
+              <IconLink destination="https://discord.com/users/379666614204891137/" target="_blank" icon={ faDiscord } darkMode={ darkMode }/>
             </div>
           </div>
 
