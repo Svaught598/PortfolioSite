@@ -41,7 +41,7 @@ export default function About(props) {
               Cool stuff I'm into includes (but is not limited to) Emulators, Math, and the area where they intersect: <a href="https://www.reddit.com/r/itrunsdoom/" target="_blank" className="text-burnt-sienna link-xl underline">All the places you can run Doom</a>
             </p>
             <p className="text-xl text-orange-yellow-crayola">
-              I mostly work with <a href="https://vuejs.org/" target="_blank" className="text-persian-green link-xl underline">Vue.js</a> &amp; <a href="https://www.djangoproject.com/" target="_blank" className="text-persian-green link-xl underline">Django</a> day-to-day, but love learning new things in my free time. I really like <a href="https://reactjs.org/" target="_blank" className="text-persian-green link-xl underline">React</a>.
+              I mostly work with <a href="https://vuejs.org/" target="_blank" className="text-persian-green link-xl underline">Vue.js</a> &amp; <a href="https://www.djangoproject.com/" target="_blank" className="text-persian-green link-xl underline">Django</a> day-to-day, but love learning new things in my free time. I really like <a href="https://reactjs.org/" target="_blank" className="text-persian-green link-xl underline">React</a>. I even used React to build this website!
             </p>
             <p className="text-xl text-orange-yellow-crayola">
               Here's my <a className="text-burnt-sienna link-xl underline">most recent resume</a>. <span>You can find more information about <Link href={ "/contact" }><a className="text-burnt-sienna link-xl underline"> how to get in touch with me </a></Link> here.</span>
