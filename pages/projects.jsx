@@ -19,7 +19,7 @@ export default function Projects(props) {
       <Head>
         <title>Projects - Steven Vaught</title>
         <meta name="description" content="Projects Steven Vaught" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="images/favicon.ico" />
       </Head>
 
       <div className="main container mx-auto w-75">

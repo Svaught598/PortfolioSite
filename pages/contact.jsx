@@ -26,7 +26,7 @@ export default function Contact(props) {
       <Head>
         <title>Contact - Steven Vaught</title>
         <meta name="description" content="Contact Steven Vaught" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="images/favicon.ico" />
       </Head>
 
       <div className="main container mx-auto w-75">
@@ -50,22 +50,22 @@ export default function Contact(props) {
           
             <form name="contact" method="POST" action="https://formspree.io/Svaught598@gmail.com"  >
               <div className="mb-2 rounded">
-                <label class="sr-only" htmlFor="inputName">Name</label>
-                <input type="text" name="name" class={ formText } id="inputName" placeholder="Name" required />
+                <label className="sr-only" htmlFor="inputName">Name</label>
+                <input type="text" name="name" className={ formText } id="inputName" placeholder="Name" required />
               </div>
               
               <div className="mb-2 rounded">
-                <label class="sr-only" htmlFor="inputEmail">Email</label>
-                <input type="email" name="email" class={ formText } id="inputEmail" placeholder="Email" required />
+                <label className="sr-only" htmlFor="inputEmail">Email</label>
+                <input type="email" name="email" className={ formText } id="inputEmail" placeholder="Email" required />
               </div>
               
               <div className="mb-2 rounded">
-                <label class="sr-only" htmlFor="inputMessage">Message</label>
-                <textarea name="message" class={clsx(formText, "h-36") } id="inputMessage" rows="5" placeholder="Message" required></textarea>
+                <label className="sr-only" htmlFor="inputMessage">Message</label>
+                <textarea name="message" className={clsx(formText, "h-36") } id="inputMessage" rows="5" placeholder="Message" required></textarea>
               </div>
 
               <div className="w-full">
-                <button type="submit" class={ clsx( "", button ) }>Send</button>
+                <button type="submit" className={ button }>Send</button>
               </div>
             </form>
 

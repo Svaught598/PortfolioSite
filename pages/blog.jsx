@@ -18,7 +18,7 @@ export default function Blog(props) {
       <Head>
         <title>Blog - Steven Vaught</title>
         <meta name="description" content="Blog Steven Vaught" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="images/favicon.ico" />
       </Head>
 
       <div className="main container mx-auto w-75">
