@@ -14,7 +14,7 @@ export default function Link({ content, destination, animated, icon }) {
   function getIcon() {
     if (icon) {
       return <img
-        className="inline h-100 mr-8"
+        className="inline h-100 mr-4"
         src={ require(`../../public/images/${ icon }.svg`)}
         height="64" width="64"
       />
