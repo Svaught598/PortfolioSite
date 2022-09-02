@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Steven Vaught</title>
+    <link>/</link>
+      <atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <description>Steven Vaught</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Fri, 21 Aug 2020 16:15:43 -0700</lastBuildDate>
+    <image>
+      <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>Steven Vaught</title>
+      <link>/</link>
+    </image>
+    
+    <item>
+      <title>NES Emulation: Part 1 - 6502 Addressing Modes</title>
+      <link>/post/addr-modes-6502/</link>
+      <pubDate>Fri, 21 Aug 2020 16:15:43 -0700</pubDate>
+      <guid>/post/addr-modes-6502/</guid>
+      <description>&lt;hr&gt;
+&lt;h2 id=&#34;flappy-bird---snes-edition&#34;&gt;Flappy Bird - SNES Edition&lt;/h2&gt;
+&lt;p&gt;It was probably about a year ago when I learned that it was possible to inject code into the SNES by manipulating CPU registers with complex actions in Super Mario World. It is insane that someone was able to 
+&lt;a href=&#34;https://www.youtube.com/watch?v=hB6eY73sLV0&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;recreate Flappy Bird in SMW&lt;/a&gt; reusing assets from the the original game. You read that right. Go watch the video, it&amp;rsquo;s awesome.
+I had to learn more about this stuff. Who wouldn&amp;rsquo;t want to know how Flappy Bird was successfully injected into a 1990 title with &lt;em&gt;nothing but a controller&lt;/em&gt;? That stuff is interesting, but SNES is a huge undertaking for a first emulator, so I opted to build the much friendlier father: the NES.
+I plan on writing a few posts to detail areas I found confusing. Maybe some more documentation on this stuff out there will prevent the all-too common questions of &amp;ldquo;Why is flag 4 always set?&amp;rdquo; and &amp;ldquo;Why does the stack pointer start at 0xFD&amp;rdquo; from popping up on r/EmuDev. Questions like these actually have incredibly straightforward answers, but the absolute mass of confusing documentation makes it hard to pin down something tangible. My goal here is to create a documentation akin to the 
+&lt;a href=&#34;http://www.obelisk.me.uk/6502/reference.html&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;6502 Documentation at obelisk.me.uk&lt;/a&gt; strictly for areas I found confusing. And it&amp;rsquo;s not like the documentation was bad! It just seems like most of it is meant as a reference for writing 6502 assembly, not for writing something that will read 6502 bytecode.&lt;/p&gt;
+&lt;h3 id=&#34;addressing-modes-in-the-6502&#34;&gt;Addressing Modes in the 6502&lt;/h3&gt;
+&lt;p&gt;Ahh, now for the meat and potatoes of it all: Addressing modes! Well, what is an addressing mode? The 6502 has actually has a fairly minimal number of instructions, and most are very simple operations (left/right bitshift, set/clear flags, load to accumulator, etc&amp;hellip;). In order to get the most out of this relatively small instruction set, the 6502 provides multiple &lt;em&gt;addressing modes&lt;/em&gt; to target different sections of memory. Some modes use less cycles than others and were preferable since speed was (and to some degree still is) a &lt;strong&gt;big deal&lt;/strong&gt;.
+But before we get into the addressing modes, maybe we should consider how the 6502 works at a high level. Essentially, the CPU does the following things over and over again:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;fetch byte from address pointed to by program counter&lt;/li&gt;
+&lt;li&gt;decode and execute that byte.
+I mean, it&amp;rsquo;s actually more complicated than that, but this is a distilled truth of the CPU. Since the instructions (or &lt;em&gt;Opcodes&lt;/em&gt;) are a single byte, that gives us 256 different instructions. But some of those bytes are unused, so we only have 151 opcodes, 56 of which are unique. After taking out the opcodes with &lt;em&gt;Implied&lt;/em&gt; addressing (which is tantamount to &lt;em&gt;no&lt;/em&gt; addressing), you get something like 32 instructions that can operate according to various addressing modes.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;implied&#34;&gt;Implied&lt;/h3&gt;
+&lt;p&gt;This is probably the simplest addressing mode to talk about. You know how CPU&amp;rsquo;s have flags, and some instructions simply set/clear a particular flag? Those instructions don&amp;rsquo;t target memory addresses, but rather a specific component of the CPU, and use Implied Mode Addressing. Some opcodes using this mode are &lt;code&gt;INX&lt;/code&gt;, &lt;code&gt;PHA&lt;/code&gt;, and &lt;code&gt;SEC&lt;/code&gt;. No additional data is read upon execution of opcodes with this addressing mode; the program counter is incremented by 1 and the next opcode is fetched.&lt;/p&gt;
+&lt;table style=&#34;width:70% !important; margin-left:15% !important; margin-right:15% !important;&#34;&gt;
+    &lt;tr&gt;
+        &lt;th&gt;Opcode&lt;/th&gt;
+        &lt;th&gt;Target Address&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;&lt;code&gt;0x18&lt;/code&gt; (CLC)&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;&amp;amp;carryFlag&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;
+&lt;h3 id=&#34;accumulator&#34;&gt;Accumulator&lt;/h3&gt;
+&lt;p&gt;This is another easy addressing mode to talk about! Basically, any opcode using this addressing mode does all of its work on the accumulator. &lt;code&gt;ROR&lt;/code&gt;, an opcode that uses this addressing mode to rotate the accumulator to the right (i.e., bitshifting 1 place to the right, and wrapping bit 0 around to fill the void left by bit 7). Similar to Implied, this mode doesn&amp;rsquo;t read any extra data after the opcode, and you can make the argument that the target address is the &amp;ldquo;address&amp;rdquo; of the accumulator.&lt;/p&gt;
+&lt;table style=&#34;width:90%; margin-left:5%; margin-right:5%;&#34;&gt;
+    &lt;tr&gt;
+        &lt;th&gt;Opcode&lt;/th&gt;
+        &lt;th&gt;Target Address&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;&lt;code&gt;0x0A&lt;/code&gt; (ASL)&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;&amp;amp;accumulator&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;
+&lt;h3 id=&#34;immediate&#34;&gt;Immediate&lt;/h3&gt;
+&lt;p&gt;Ok, this bad boy is where we start reading in data! Basically, the byte that &lt;strong&gt;immediately&lt;/strong&gt; follows the opcode in memory is our &amp;ldquo;target&amp;rdquo;. So the target address is PC + 1, where PC (Program Counter) is the location of the executing opcode. The following table shows &lt;code&gt;0xFF&lt;/code&gt; being loaded into the accumulator.&lt;/p&gt;
+&lt;table style=&#34;width:90%; margin-left:5%; margin-right:5%;&#34;&gt;
+    &lt;tr&gt;
+        &lt;th&gt;Opcode&lt;/th&gt;
+        &lt;th&gt;Next Byte&lt;/th&gt;
+        &lt;th&gt;Target Address&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;&lt;code&gt;0xA9&lt;/code&gt; (LDA)&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0xFF&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;PC + 1&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;
+&lt;h3 id=&#34;relative&#34;&gt;Relative&lt;/h3&gt;
+&lt;p&gt;Relative addressing is used predominantly (entirely?) in branching instructions to skip over segments of code conditionally. These instructions take the byte following the opcode, and add it to the program counter to produce a target address. The only catch is that signed arithmetic is used, so the program counter can also jump backwards depending on the value of the next byte.&lt;/p&gt;
+&lt;table style=&#34;width:90%; margin-left:5%; margin-right:5%;&#34;&gt;
+    &lt;tr&gt;
+        &lt;th&gt;Opcode&lt;/th&gt;
+        &lt;th&gt;Next Byte&lt;/th&gt;
+        &lt;th&gt;Target Address&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;&lt;code&gt;0x90&lt;/code&gt; (BCC)&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0x02&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;PC + 0x02&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;
+&lt;h3 id=&#34;zero-page&#34;&gt;Zero Page&lt;/h3&gt;
+&lt;p&gt;Zero Page Addressing always accesses the &lt;code&gt;0x00&lt;/code&gt; page of the address space, meaning it never undergoes a page break and only requires a single byte to specify. This makes it really performant, but also very limited. The byte immediately following the opcode makes up the lower byte of the &amp;ldquo;target address&amp;rdquo;.&lt;/p&gt;
+&lt;table style=&#34;width:90%; margin-left:5%; margin-right:5%;&#34;&gt;
+    &lt;tr&gt;
+        &lt;th&gt;Opcode&lt;/th&gt;
+        &lt;th&gt;Next Byte&lt;/th&gt;
+        &lt;th&gt;Target Address&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;&lt;code&gt;0x84&lt;/code&gt; (STY)&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0xC2&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0x00C2&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;
+&lt;h3 id=&#34;zero-page-x--zero-page-y&#34;&gt;Zero Page, X &amp;amp; Zero Page, Y&lt;/h3&gt;
+&lt;p&gt;Zero Page, X &amp;amp; Zero Page, Y are both just the regular Zero Page addressing mode with the contents of register X or Y being added to the &amp;ldquo;Target Address&amp;rdquo;. If the addition causes the &amp;ldquo;Target Address&amp;rdquo; to cross a page boundary, the upper byte is discarded such that the final address is still on the zero page.&lt;/p&gt;
+&lt;table style=&#34;width:90%; margin-left:5%; margin-right:5%;&#34;&gt;
+    &lt;tr&gt;
+        &lt;th&gt;Opcode&lt;/th&gt;
+        &lt;th&gt;Next Byte&lt;/th&gt;
+        &lt;th&gt;Y Register&lt;/th&gt;
+        &lt;th&gt;Target Address&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;&lt;code&gt;0xB6&lt;/code&gt; (LDX)&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0xEA&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0x60&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0x004A&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;
+&lt;h3 id=&#34;absolute&#34;&gt;Absolute&lt;/h3&gt;
+&lt;p&gt;Absolute addressing takes the two bytes after the opcode and use them to construct a target address. The first byte is the lower byte, and the second byte is the higher byte.&lt;/p&gt;
+&lt;table style=&#34;width:90%; margin-left:5%; margin-right:5%;&#34;&gt;
+    &lt;tr&gt;
+        &lt;th&gt;Opcode&lt;/th&gt;
+        &lt;th&gt;Lower Byte&lt;/th&gt;
+        &lt;th&gt;Upper Byte&lt;/th&gt;
+        &lt;th&gt;Target Address&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;&lt;code&gt;0xED&lt;/code&gt; (SBC)&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0xB3&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0x21&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0x21B3&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;
+&lt;h3 id=&#34;absolute-x--absolute-y&#34;&gt;Absolute, X &amp;amp; Absolute Y&lt;/h3&gt;
+&lt;p&gt;These two addressing modes are so similar they might as well be the same. Both of them find the Absolute Target Address (detailed just above) and add either register X or Y to it.&lt;/p&gt;
+&lt;table style=&#34;width:90%; margin-left:5%; margin-right:5%;&#34;&gt;
+    &lt;tr&gt;
+        &lt;th&gt;Opcode&lt;/th&gt;
+        &lt;th&gt;Lower Byte&lt;/th&gt;
+        &lt;th&gt;Upper Byte&lt;/th&gt;
+        &lt;th&gt;X Register&lt;/th&gt;
+        &lt;th&gt;ABS Address&lt;/th&gt;
+        &lt;th&gt;Target Address&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;&lt;code&gt;0xFD&lt;/code&gt; (SBC)&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0x13&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0x4B&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0x20&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0x4B13&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0x4B33&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;
+&lt;h3 id=&#34;indirect&#34;&gt;Indirect&lt;/h3&gt;
+&lt;p&gt;So far, none of the addressing modes have been very complicated: that starts change with Indirect Addressing. You know how a lot of beginner programmers get hung up on pointers? Well, Indirect addressing uses pointers. A first address is obtained similarly to Absolute, and is used as a pointer to a second space in memory, where the &amp;ldquo;Target Address&amp;rdquo; is read from. The 6502 - an 8 bit machine with 16 bit address space - has no way of supporting 16 bit arithmetic, so crossing page boundaries (e.g. reading &lt;code&gt;0x01FF&lt;/code&gt; and then reading &lt;code&gt;0x0200&lt;/code&gt; takes an additional cycle. Be it intentional or a bug, this extra cycle isn&amp;rsquo;t taken when loading the &amp;ldquo;target address&amp;rdquo;, so the address wraps around to the same page. Clear as mud? Maybe the following table will be easier to understand.&lt;/p&gt;
+&lt;table style=&#34;width:90%; margin-left:5%; margin-right:5%;&#34;&gt;
+    &lt;tr&gt;
+        &lt;th&gt;Opcode&lt;/th&gt;
+        &lt;th&gt;Lower Byte&lt;/th&gt;
+        &lt;th&gt;Upper Byte&lt;/th&gt;
+        &lt;th&gt;ABS Address&lt;/th&gt;
+        &lt;th&gt;Target Lower Byte&lt;/th&gt;
+        &lt;th&gt;Target Upper Byte&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;&lt;code&gt;0x6C&lt;/code&gt; (JMP)&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0xFF&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0x34&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0x34FF&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;read from &lt;code&gt;0x34FF&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;read from &lt;code&gt;0x3400&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;
+&lt;h3 id=&#34;indirect-x&#34;&gt;Indirect, X&lt;/h3&gt;
+&lt;p&gt;This addressing mode is kind of like a combination of Zero Page X &amp;amp; Indirect. First, the Zero Page X address is read. Afterwards, this address is used to find the &amp;ldquo;Target Address&amp;rdquo;. And in the spirit of the original Indirect bug/feature, if the Zero Page X address is &lt;code&gt;0x00FF&lt;/code&gt;, the second byte is loaded from &lt;code&gt;0x0000&lt;/code&gt; instead of &lt;code&gt;0x0100&lt;/code&gt;&lt;/p&gt;
+&lt;table style=&#34;width:90%; margin-left:5%; margin-right:5%;&#34;&gt;
+    &lt;tr&gt;
+        &lt;th&gt;Opcode&lt;/th&gt;
+        &lt;th&gt;Next Byte&lt;/th&gt;
+        &lt;th&gt;X Register&lt;/th&gt;
+        &lt;th&gt;Zero Page X&lt;/th&gt;
+        &lt;th&gt;Target Lower Byte&lt;/th&gt;
+        &lt;th&gt;Target Upper Byte&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;&lt;code&gt;0x81&lt;/code&gt; (STA)&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0x55&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0x35&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0x0090&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;read from &lt;code&gt;0x0090&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;read from &lt;code&gt;0x0091&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;
+&lt;h3 id=&#34;indirect-y&#34;&gt;Indirect, Y&lt;/h3&gt;
+&lt;p&gt;This addressing mode is kind of like a combination of Zero Page &amp;amp; Indirect. With an extra Y Register Addition. After a Zero Page address is read, it is used to find the &amp;ldquo;Target Address&amp;rdquo;. Finally, the contents of the Y Register are added to this &amp;ldquo;Target Address&amp;rdquo;.&lt;/p&gt;
+&lt;table style=&#34;width:90%; margin-left:5%; margin-right:5%;&#34;&gt;
+    &lt;tr&gt;
+        &lt;th&gt;Opcode&lt;/th&gt;
+        &lt;th&gt;Next Byte&lt;/th&gt;
+        &lt;th&gt;Zero Page&lt;/th&gt;
+        &lt;th&gt;Target Lower Byte&lt;/th&gt;
+        &lt;th&gt;Target Upper Byte&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;&lt;code&gt;0x11&lt;/code&gt; (ORA)&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0x76&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;&lt;code&gt;0x0076&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;read from &lt;code&gt;0x0076&lt;/code&gt;&lt;/td&gt;
+        &lt;td&gt;read from &lt;code&gt;0x0077&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;
+&lt;h2 id=&#34;sample-code&#34;&gt;Sample Code&lt;/h2&gt;
+&lt;p&gt;Below are my implementations of these addressing modes in C++. I chose to treat each mode as a function that returns the target address and have handling of reading/writing local to the opcode function.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-cpp&#34;&gt;// Immediate
+u16 CPU::IMM(){
+    u16 temp = PC + 1;
+    PC += 2;
+    return temp;
+}
+
+// Accumulator
+u16 CPU::ACC(){
+    PC += 1;
+    return ACCUMULATOR_ADDRESS;
+}
+
+// Relative
+u16 CPU::REL(){
+    s16 address = PC;
+    s8 offset = read(PC + 1);
+    address += offset + 2;
+    return (u16) address;
+}
+
+// Zero Page
+u16 CPU::ZPG(){
+    u8 address = read(PC + 1);
+    PC += 2;
+    return (u16) address;
+}
+
+// Zero Page X
+u16 CPU::ZPX(){
+    u16 address = read(PC + 1);
+    address = (address + X) &amp;amp; 0xFF;
+    PC += 2;
+    return address;
+}
+
+// Zero Page Y
+u16 CPU::ZPY(){
+    u16 address = read(PC + 1);
+    address = (address + Y) &amp;amp; 0xFF;
+    PC += 2;
+    return address;
+}
+
+// Absolute
+u16 CPU::ABS(){
+    u16 LSN = read(PC + 1);
+    u16 MSN = read(PC + 2);
+    u32 address = LSN + (MSN &amp;lt;&amp;lt; 8);
+    PC += 3;
+    return address;
+}
+
+// Absolute X
+u16 CPU::ABX(){
+    u32 address = ABS();
+    return address + X;
+}
+
+// Absolute Y
+u16 CPU::ABY(){
+    u32 address = ABS();
+    return address + Y;
+}
+
+// Indirect
+u16 CPU::IND(){
+    u16 ABS_LSN = read(PC + 1);
+    u16 ABS_MSN = read(PC + 2);
+    u16 ABS_address = (ABS_MSN &amp;lt;&amp;lt; 8) + ABS_LSN;
+
+    // AN INDIRECT JUMP MUST NEVER USE A VECTOR BEGINNING ON THE LAST BYTE OF A PAGE
+    u16 address, LSN, MSN;
+    if ((ABS_address &amp;amp; 0xFF) == 0xFF){
+        LSN = read(ABS_address);
+        MSN = read(ABS_address &amp;amp; 0xFF00);
+        address = (MSN &amp;lt;&amp;lt; 8) + LSN;
+    } else {
+        LSN = read(ABS_address);
+        MSN = read(ABS_address + 1);
+        address = (MSN &amp;lt;&amp;lt; 8) + LSN;
+    }
+    PC += 2;
+    return address;
+}
+
+// Indirect X
+u16 CPU::IDX(){
+    u16 address = (read(PC + 1) + X) &amp;amp; 0xFF;
+    u16 LSN = read(address);
+    u16 MSN = read((address + 1) &amp;amp; 0xFF);
+    address = (MSN &amp;lt;&amp;lt; 8) + LSN;
+    PC += 2;
+    return address;
+}
+
+// Indirect Y
+u16 CPU::IDY(){
+    u16 temp = read(PC + 1);
+    u16 LSN = read(temp);
+    u16 MSN = read((temp + 1) &amp;amp; 0xFF);
+    u16 address = LSN + (MSN &amp;lt;&amp;lt; 8) + Y;
+    PC += 2;
+    return address;
+}
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>The Maximum Subarray Problem</title>
+      <link>/post/max_subarray/</link>
+      <pubDate>Fri, 21 Aug 2020 16:15:43 -0700</pubDate>
+      <guid>/post/max_subarray/</guid>
+      <description>&lt;hr&gt;
+&lt;p&gt;This problem is a classic. Or so I&amp;rsquo;m told. The maximum subarray problem is involves finding the maximum sum out of all contiguous subarrays. It&amp;rsquo;s one of those problems that seems straightforward, and then boom - complicated edge cases seemingly appear from the heavens to say &amp;ldquo;Not so fast!&amp;quot;. But that&amp;rsquo;s the essence of algorithm problems, right? They assess a developer&amp;rsquo;s ability to see beyond the scope of some given test cases and construct a robust solution.&lt;/p&gt;
+&lt;h2 id=&#34;the-problem&#34;&gt;The Problem&lt;/h2&gt;
+&lt;hr&gt;
+&lt;p&gt;Given an integer array &lt;code&gt;nums&lt;/code&gt;, find the contiguous subarray (containing at least one number) which has the largest sum and return its sum.&lt;/p&gt;
+&lt;p&gt;Example:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Input:&lt;/strong&gt; &lt;code&gt;[-2, 1,-3, 4,-1, 2, 1,-5, 4]&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Output:&lt;/strong&gt; &lt;code&gt;6&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Explanation:&lt;/strong&gt; &lt;code&gt;[ 4,-1, 2, 1]&lt;/code&gt; has the largest sum of 6.
+&lt;/br&gt;
+&lt;/br&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;a-first-solution&#34;&gt;A First Solution&lt;/h2&gt;
+&lt;hr&gt;
+&lt;p&gt;So this looks like a great problem to use prefix sums, right? You can iterate over the array and keep track of the minimum and maximum prefix sums you&amp;rsquo;ve encountered, and then &lt;code&gt;max_prefix - min_prefix&lt;/code&gt; will give you the largest sum! Just look at the prefix sum array for our example below:
+&lt;/br&gt;
+&lt;/br&gt;&lt;/p&gt;
+&lt;p&gt;Prefix Sum Array:&lt;code&gt;[-2,-1,-4, 0,-1, 1, 2,-3, 2]&lt;/code&gt;
+&lt;/br&gt;
+&lt;/br&gt;&lt;/p&gt;
+&lt;p&gt;Our answer is simply &lt;code&gt;2-(-4)=6&lt;/code&gt;. This works because the difference in two prefix sums gives you the sum of all elements between where &lt;code&gt;max_prefix&lt;/code&gt; and &lt;code&gt;min_prefix&lt;/code&gt; are located. Straightforward. time to code it up..
+&lt;/br&gt;
+&lt;/br&gt;&lt;/p&gt;
+&lt;h2 id=&#34;not-so-fast&#34;&gt;&amp;ldquo;Not so fast!&amp;rdquo;&lt;/h2&gt;
+&lt;hr&gt;
+&lt;p&gt;You probably already found the fault in my reasoning, but I was not so lucky to see the issue until I had written code. There are some cases that I hadn&amp;rsquo;t considered:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;What happens if the list is only one element? Then &lt;code&gt;max_prefix&lt;/code&gt; and &lt;code&gt;min_prefix&lt;/code&gt; are the same, so you get a return of 0. This isn&amp;rsquo;t correct!&lt;/li&gt;
+&lt;li&gt;Suppose you have an array &lt;code&gt;[-2, 1,-3, 4,-1, 2, 1,-5,-9]&lt;/code&gt;. Now the &lt;code&gt;min_prefix&lt;/code&gt; occurs &lt;em&gt;after&lt;/em&gt; the &lt;code&gt;max_prefix&lt;/code&gt;! Obviously the answer is the same as in the given example, so this is incorrect.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This is the motive behind algorithm questions - can you handle the ambiguity? Programming a solution to a problem only works when the problem is &lt;em&gt;well-defined&lt;/em&gt;, and it&amp;rsquo;s usually up to the developer to define what the scope is. If our given array was guaranteed to have at least two elements along with &lt;code&gt;min_prefix&lt;/code&gt; occuring before &lt;code&gt;max_prefix&lt;/code&gt;, then this solution would be ideal! Unfortunately, this is not the case for the problem on Leetcode: My original solution failed for the second edge case listed.&lt;/p&gt;
+&lt;h2 id=&#34;the-solution-to-our-solution&#34;&gt;The Solution to our &amp;ldquo;Solution&amp;rdquo;&lt;/h2&gt;
+&lt;hr&gt;
+&lt;p&gt;But alas, there is hope! The simple solution is two use a conditional to filter the first edge case, and use the current &lt;code&gt;prefix_sum&lt;/code&gt; instead of &lt;code&gt;max_prefix&lt;/code&gt;. Because the current &lt;code&gt;prefix_sum&lt;/code&gt; is always ahead of &lt;code&gt;min_prefix&lt;/code&gt; we never have to deal with the second edge case. At each point in the iteration we take the max of two values: the current &lt;code&gt;result&lt;/code&gt; and &lt;code&gt;prefix_sum - min_prefix&lt;/code&gt;. If the current prefix sum is lower than the minimum prefix sum encountered, we update &lt;code&gt;min_prefix&lt;/code&gt;. Now we can implement a solution using prefix sums! Before we do so, it helps to go ahead and write down all the contraints for the problem, just so we don&amp;rsquo;t have to deal with any more unexpected edge cases:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;input array &lt;code&gt;nums&lt;/code&gt; is always at least one element long&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Wow, not many constraints! This is &lt;em&gt;the reason&lt;/em&gt; problem is unecesarily tricky; It is very easy to underestimate the complexity of open-ended problems. Anyway, here&amp;rsquo;s the implementation using prefix sums:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def maxSubArray(self, nums):
+        &amp;quot;&amp;quot;&amp;quot;
+        Finds maximum sum of all contiguous subarrays
+        using prefix sums!
+
+        input:
+            `nums`: array of integers
+        
+        returns:
+            `result`: integer
+        &amp;quot;&amp;quot;&amp;quot;
+        # edge case, list is one element long
+        if len(nums) == 1:
+            return nums[0]
+        
+        # Initialize variables
+        min_prefix = 0
+        prefix_sum = 0
+        result = -float(inf)
+        
+        # compute prefix sum, find sum of subarray, update min_prefix
+        for num in nums:
+            prefix_sum += num
+            result = max(result, prefix_sum - min_prefix)
+            min_prefix = min(min_prefix, prefix_sum)
+            
+        return result
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;a-second-solution&#34;&gt;A Second Solution&lt;/h2&gt;
+&lt;hr&gt;
+&lt;p&gt;Now entering Kadane&amp;rsquo;s algorithm. I&amp;rsquo;m don&amp;rsquo;t have a formal background in Computer Science, so I didn&amp;rsquo;t have the benefit of already being exposed to Kadane&amp;rsquo;s algorithm upon first encountering &amp;ldquo;The Maximum Subarray Problem&amp;rdquo;. The way Kadane&amp;rsquo;s algorithm works is actually very similar to the prefix sum method, and while it performs about the same, the code looks much cleaner. It works by keeping track of sums as you iterate through the array (&lt;em&gt;go figure&lt;/em&gt;).&lt;/p&gt;
+&lt;p&gt;Consider iterating through the list manually with a working subarray, trying to find the max subarray. Kadane&amp;rsquo;s algorithm says you have two options at each step:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Ditch your current working subarray and start a new working subarray array with the next element.&lt;/li&gt;
+&lt;li&gt;Keep your current working subarray and add append the next element to it.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Phrased like this, all we have left is to figure out how to decide between these choices. Because the problem is concerned with the maximum &lt;em&gt;sum&lt;/em&gt; of all subarrays, all we need to do is check to see if the next element will make our sum larger than it already is. If our current sum is larger, we stick with option 1, and if our would-be sum is larger, we go with option 2. The real beauty of this solution is that you can implement it in such a way that the edge cases are taken care of without any additional logic! Such an implementation might look like:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def maxSubArray(self, nums):
+        &amp;quot;&amp;quot;&amp;quot;
+        Finds maximum sum of all contiguous subarrays
+        using Kadane&#39;s Algorithm
+
+        input:
+            `nums`: array of integers
+        
+        returns:
+            `max(nums)`: integer
+        &amp;quot;&amp;quot;&amp;quot;
+        # start at second element 
+        for i in range(1,len(nums)):
+
+            # increase the local sum if next number increases it
+            if nums[i-1]+nums[i] &amp;gt; nums[i]:
+                nums[i] = nums[i-1]+nums[i]
+
+            # otherwise, start new local sum
+            else:
+                nums[i] = nums[i]
+
+        # Return the max of all local max subarray sums
+        return max(nums)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This is purposefully lengthy to draw a comparison to the options above. Making it short and sweet, we get a very eloquent solution:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def maxSubArray(self, nums):
+        &amp;quot;&amp;quot;&amp;quot;
+        Finds maximum sum of all contiguous subarrays
+        using Kadane&#39;s Algorithm
+
+        input:
+            `nums`: array of integers
+        
+        returns:
+            `max(nums)`: integer
+        &amp;quot;&amp;quot;&amp;quot;
+        for i in range(1,len(nums)):
+            nums[i] = max(nums[i-1]+nums[i], nums[i])
+        return max(nums)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Just like any algorithm problem, there are trade-offs to the solutions. Because of what I can only assume is overhead in accessing Python lists by indices, Kadane&amp;rsquo;s algorithm is actually &lt;em&gt;slower&lt;/em&gt; than the solution using prefix sums. This totally shocked me, but the difference is only 20ms by Leetcode&amp;rsquo;s measurement, so there probably isn&amp;rsquo;t much difference. The implementations of Kadane&amp;rsquo;s modifies the &lt;code&gt;nums&lt;/code&gt; array, but since Python is weird, new items are created on the heap and the pointers are modified to point to the new elements. In a statically typed language, Kadane&amp;rsquo;s would beat out Prefix Sums in terms of memory, but they still rank the same in runtime complexity (that is &lt;code&gt;O(n)&lt;/code&gt;).&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Flaskov</title>
+      <link>/project/flaskov/</link>
+      <pubDate>Wed, 19 Aug 2020 00:00:00 +0000</pubDate>
+      <guid>/project/flaskov/</guid>
+      <description>&lt;h1 id=&#34;currently-under-construction&#34;&gt;&lt;em&gt;Currently under construction&lt;/em&gt;&lt;/h1&gt;
+&lt;h1 id=&#34;about-the-project&#34;&gt;About The Project&lt;/h1&gt;
+&lt;p&gt;Markov Chains are simple stochastic models that predict the future state of a system using only the current state. Despite being very naive models, you can effectively use them to generate &lt;em&gt;fake sentences&lt;/em&gt; by building them from a corpus of actual sentences. Consider the following collection of sentences:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;I am very scared.&lt;/li&gt;
+&lt;li&gt;I hate spiders.&lt;/li&gt;
+&lt;li&gt;Spiders are very creepy.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;A Markov Chain model constructed from this corpus might look a bit like:
+&lt;img src=&#34;example.png&#34; alt=&#34;example image&#34;&gt;&lt;/p&gt;
+&lt;p&gt;where each node represents a word in a sentence, and the numbers are relative weights (or probabilites) for words that follow. You can increase the accuracy of these models by adding to the corpus, or increasing the amount of words used to predict the next word (e.g. (&amp;lsquo;I&amp;rsquo;, &amp;lsquo;am&amp;rsquo;) &amp;mdash;&amp;gt; &amp;lsquo;very&amp;rsquo;). Other tooling exists in the Python ecosystem that can be joined with this method to improve sentence generation further (
+&lt;a href=&#34;https://github.com/nltk/nltk&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;NLTK&lt;/a&gt;).&lt;/p&gt;
+&lt;p&gt;I started this project to learn more about web-development while playing around with this concept.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>CHIP-8 Emulator</title>
+      <link>/project/chip8/</link>
+      <pubDate>Fri, 31 Jul 2020 00:00:00 +0000</pubDate>
+      <guid>/project/chip8/</guid>
+      <description>&lt;h1 id=&#34;about-the-project&#34;&gt;About The Project&lt;/h1&gt;
+&lt;p&gt;Since I found out about system emulation, I have been super fascinated with it. I&amp;rsquo;m building this CHIP-8 emulator (interpreter&amp;hellip;?) to get started since the EmuDev community tends to suggest it for first-timers. So what is the CHIP-8? The CHIP-8 is an abstract machine (not unlike the JVM) that was first used to play games on the COSMAC VIP in the 1970s. I thought while considering this project, &amp;ldquo;Why not implement an abstract virtual machine by using the implementation of a different abstract virtual machine?&amp;quot;, and thus, this project came to be!&lt;/p&gt;
+&lt;h1 id=&#34;features&#34;&gt;Features&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;Thorough Debug UI (panels to monitor registers, stack, timers, program counter, etc&amp;hellip;)&lt;/li&gt;
+&lt;li&gt;Save/Load from savestates&lt;/li&gt;
+&lt;li&gt;Variable CPU clock speed&lt;/li&gt;
+&lt;li&gt;Pause/Resume/Reset Emulation&lt;/li&gt;
+&lt;li&gt;Load ROMs from file or from list&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;problems&#34;&gt;Problems&lt;/h1&gt;
+&lt;p&gt;I haven&amp;rsquo;t used Java extensively, and this project hardly made me an expert, but I have become much more familiar with the language as a result. There were some pretty complex parts to making this emulator, the most challenging of which had to do with the Event dispatch thread and the opcode 0xFX0A. Anyone familiar enough with the CHIP-8 to recognize opcodes might see where this is going: any time the CPU interpreted 0xFX0A, it paused the thread, which meant that input couldn&amp;rsquo;t be read.&lt;/p&gt;
+&lt;p&gt;Opcode 0xFX0A is pretty simple. At least, my implementation is. It tells the CPU &amp;ldquo;hey, why don&amp;rsquo;t you &lt;code&gt;sleep()&lt;/code&gt; until a key is pressed?&amp;quot;. This becomes a problem in a single threaded application since continuous calls of &lt;code&gt;sleep()&lt;/code&gt; end up blocking IO, so the program is never able to &lt;em&gt;tell&lt;/em&gt; when a key is pressed. So in plainspeak, an infitite loop. I ended up fixing the issue by dispatching UI/IO events on the &lt;code&gt;Event Dispatch Thread&lt;/code&gt; provided by swing, while running other logic on a separate thread. This was a pretty nice solution, but I do wish I would&amp;rsquo;ve spent more time planning the implementation before jumping right into the code. This brings us to the biggest thing I learned:&lt;/p&gt;
+&lt;h1 id=&#34;the-importance-of-planning&#34;&gt;The Importance of Planning&lt;/h1&gt;
+&lt;p&gt;As a Physics graduate (now aspiring developer) I haven&amp;rsquo;t had the proper training in computer science fundamentals and best practices for Object-Oriented Programming (OOP). This isn&amp;rsquo;t to say I suck (I mean, I could be better), but that I didn&amp;rsquo;t even know what to consider while building this application. This lack of planning - in a Java project, mind you - resulted in a mess of everything being public. This wasn&amp;rsquo;t a huge issue for this small project, but in a larger project it could manifest as having pieces of code that are insanely complex.&lt;/p&gt;
+&lt;p&gt;For example, say there is a method in CPU called &lt;code&gt;initializeMemory()&lt;/code&gt; that does the heavy lifting of setting the memory, register, timers, etc&amp;hellip; all to 0. Now we make the method public and call it from the CPU constructor upon startup AND call it from the GUI panel anytime someone presses &lt;strong&gt;reset&lt;/strong&gt;. Seems like a win-win. Some time passes, and it is decided that the current implementation of &lt;strong&gt;reset&lt;/strong&gt; is not what is needed; the application actually needs to preserve some memory upon resetting the system! now there are two options, neither of which are super enticing:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Expose a &lt;strong&gt;new&lt;/strong&gt; method in CPU called &lt;code&gt;reset()&lt;/code&gt;. If the CPU and GUI panel are the only objects using &lt;code&gt;initializeMemory()&lt;/code&gt;, great! That means this was caught early, and the code isn&amp;rsquo;t all tangly and gross. But imagine every single one of your test cases calls &lt;code&gt;initializeMemory()&lt;/code&gt;. We can&amp;rsquo;t just make the old method private, or we can&amp;rsquo;t run the tests! Now there are two public methods that are confusingly similar. This branches into a subdecision of &lt;strong&gt;refactoring tests&lt;/strong&gt; or &lt;strong&gt;deal with ambiguity&lt;/strong&gt;. The former makes the code maintainable but takes a lot longer and the second is a quick fix that makes additional changes more complex, but a little bit of planning would have circumvented this entire fiasco. Needless to say, I have become acquainted with the concept of technical debt. Oh yeah, and option two&amp;hellip;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;I lied, sorry. The two options are really just one option in a trenchcoat that will either mug you or make you balance their checkbook. Just do things right and plan next time.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Infection Simulation</title>
+      <link>/project/infection/</link>
+      <pubDate>Sat, 18 Apr 2020 00:00:00 +0000</pubDate>
+      <guid>/project/infection/</guid>
+      <description>&lt;h1 id=&#34;about-the-project&#34;&gt;About The Project&lt;/h1&gt;
+&lt;p&gt;This was one of the projects I did during my Computational Physics course at Texas A&amp;amp;M University-Commerce. The programming and physics were a ton of fun! &amp;hellip;learning the syntax for gnuplot wasn&amp;rsquo;t. Here&amp;rsquo;s a quick example for the terribly unintuitive syntax (and yes, the repeated colons are necessary):&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;plot infile using 2:xtic(1) every :::1::1 t &amp;quot;Healthy&amp;quot; lc rgb &amp;quot;blue&amp;quot;, \
+         &#39;&#39; using 3 every :::1::1 t &amp;quot;Infected&amp;quot; lc rgb &amp;quot;dark-green&amp;quot;, \
+         &#39;&#39; using 4 every :::1::1 t &amp;quot;Recovered&amp;quot; lc rgb &amp;quot;dark-yellow&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id=&#34;effectiveness-of-social-distancing&#34;&gt;Effectiveness of Social Distancing&lt;/h1&gt;
+&lt;p&gt;I incorporated a parameter to set a certain amount of the population to stay still to kind of simulate &lt;em&gt;social distancing&lt;/em&gt;. The idea was that we should be able to get an idea for how effective social distancing is when it comes to slowing the spread of a contagion. It turns out it is pretty effective! I don&amp;rsquo;t have the results in the Github link, but I believe it came out to be that 30% of the population was social distancing, the rate of infection was halved.&lt;/p&gt;
+&lt;h1 id=&#34;problems&#34;&gt;Problems&lt;/h1&gt;
+&lt;p&gt;Honestly, the bulk of the problems I had with this project revolved around using this plotting software. The learning curve is comparable to the base of a cliff; it was impossibly complex at first and all at once became straightforward and simple. I actually prefer gnuplot over the more popular matplotlib after this project since the software is so flexible with plotting data. If there are any academics reading this, I implore you: learn how to use this software. It made a lot of things - normally complex in Python/Matplotlib - very simple.&lt;/p&gt;
+&lt;p&gt;I did have one minor problem unrelated to Gnuplot: 10 seconds of simulation took 10 minutes to prepare. This really wasn&amp;rsquo;t a huge issue, but I liked having instant feeback when I made changes to the project, so I took a profiler to my code and found that the biggest bottleneck was with IO. Apparently opening and closing files takes a lot of time. News to me. I circumvented this by storing all the data in one file, using &lt;code&gt;\n&lt;/code&gt; as a delimeter to differentiate between clusters of particles at different timesteps, but alas, the program still took 8 minutes to prepare 10 seconds!&lt;/p&gt;
+&lt;p&gt;The profiler now said that the bottleneck was invoking a subprocess with gnuplot. I realized that plotting any constiuent timestep was an orthogonal task to all others. This meant that I could call all &lt;code&gt;plot(timestep)&lt;/code&gt; in parallel with each other and not worry about complicated stuff like race conditions. Implementing it was super easy, but it also meant that I had to start storing data for timesteps in separate files to keep things thread safe (probably didn&amp;rsquo;t &lt;em&gt;have&lt;/em&gt; to, but I didn&amp;rsquo;t know gnuplot well enough to come up with a better solution). It also meant that each plotting task would require it&amp;rsquo;s own instance of Gnuplot, so there was a very real chance it would remain slow, or worse: &lt;em&gt;become even slower&lt;/em&gt;. I made the changes, and got a speed increase of X10! Now, rendering 10 seconds of simulation was just short of a minute!&lt;/p&gt;
+&lt;h1 id=&#34;future-work&#34;&gt;Future Work&lt;/h1&gt;
+&lt;p&gt;I might pick this project up again in the future since there is so much room for expansion. Things could be made much quicker by using CUDA and drawing with OpenGL instead of plotting.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>WetLabApp</title>
+      <link>/project/wetlab/</link>
+      <pubDate>Fri, 27 Mar 2020 00:00:00 +0000</pubDate>
+      <guid>/project/wetlab/</guid>
+      <description>&lt;h1 id=&#34;about-the-project&#34;&gt;About The Project&lt;/h1&gt;
+&lt;p&gt;Other than writing small scripts to perform very specific tasks, this was my first real programming project. I had some difficulties finding applications to make solutions for my research (most applications do not perform the calculations that I needed), so I decided to make my own. I would commonly spend 30-40 minutes just doing calculations, then more time doing them again just to ensure that they were correct. It was during this project that I realized that I truly loved software development.&lt;/p&gt;
+&lt;h1 id=&#34;problems&#34;&gt;Problems&lt;/h1&gt;
+&lt;p&gt;So the biggest problem I had starting out is a problem I wouldn&amp;rsquo;t even dream of having today. I couldn&amp;rsquo;t figure out how to organize packages and functions to make the code &lt;code&gt;modular&lt;/code&gt;. I spent about a month messing around with a broken pile of conditionals and magic values, and eventually gave up. The project wasn&amp;rsquo;t even functional, and my database was a crappy JSON file. Did I mention that I didn&amp;rsquo;t even know what a class was? I thought, &lt;em&gt;&amp;ldquo;Maybe this whole software thing isn&amp;rsquo;t right for me&amp;rdquo;.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Some time passed, and I stumbled upon the idea of architecture in code. For as long as I pursued this project, I hadn&amp;rsquo;t looked into reading about programming practices at all, so the fact that there are agreed upon codebase structures really shocked me. I read more about Object-Oriented Programming, and became familiar with some of the software design patterns commonly used. I quickly decided to refactor the entire codebase using an MVC architecture. After some time, adding features became super easy! The project went from being painfully unmaintainable to functional and even organized. I&amp;rsquo;m sure there are a lot of areas that could be designed better, but just making the change to modular code made such a huge difference that I&amp;rsquo;m not even sure what those areas might be.&lt;/p&gt;
+&lt;p&gt;The only other major challenge was handling dependencies. I used Python and the Kivy framework to build this project, but switched dev machines halfway through. This resulted in a new installation of Kivy that was different from the prior one. I had no idea at the time, and never implemented unit tests, so I didn&amp;rsquo;t catch the issue until I had already built on top of the new API. I ended up with an application that was built with two incompatible versions of Kivy, that was able to be run on &lt;strong&gt;zero&lt;/strong&gt; platforms. I fixed it &lt;em&gt;eventually&lt;/em&gt;. Needless to say, I understood the value of unit testing and dependency management after this absolute fiasco.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
