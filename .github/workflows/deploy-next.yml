@@ -5,18 +5,25 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  Build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2
-        
+
+
       - name: Build Next.JS App
         uses: actions/setup-node@v1
         with:
           node-version: 12
       - run: npm ci
       - run: npm run build
+      
+      
+      - name: Copy Important Files
+      - shell: bash
+        run: mv ./copy/* ./out
+      
       
       - name: Pushes build to Github Pages repo
         uses: cpina/github-action-push-to-another-repository@main
@@ -27,4 +34,4 @@ jobs:
           destination-github-username: 'svaught598'
           destination-repository-name: 'svaught598.github.io'
           user-email: svaught598@gmail.com
-          target-branch: main
+          target-branch: master
