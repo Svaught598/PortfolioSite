@@ -1,0 +1,30 @@
+name: Deploy Next.JS Application
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+        
+      - name: Build Next.JS App
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - run: npm ci
+      - run: npm run build
+      
+      - name: Pushes build to Github Pages repo
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+          SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
+        with:
+          source-directory: 'out'
+          destination-github-username: 'svaught598'
+          destination-repository-name: 'svaught598.github.io'
+          user-email: svaught598@gmail.com
+          target-branch: main
