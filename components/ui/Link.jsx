@@ -3,12 +3,22 @@ import NextLink from 'next/link'
 import clsx from 'clsx'
 
 
-export default function Link({ content, destination, animated }) {
+export default function Link({ content, destination, animated, icon }) {
   const [mouseOver, setMouseOver] = useState(false)
 
   function handleMouseOver(e) {
     if (e.type === "mouseover") return setMouseOver(true)
     return setMouseOver(false)
+  }
+
+  function getIcon() {
+    if (icon) {
+      return <img
+        className="inline h-100 mr-8"
+        src={ require(`../../public/images/${ icon }.svg`)}
+        height="64" width="64"
+      />
+    }
   }
 
   return (
@@ -23,7 +33,8 @@ export default function Link({ content, destination, animated }) {
           animated && mouseOver && "animate__animated animate__headShake",
         )}
       >
-          {content}
+          { getIcon() }
+          { content }
       </a>
     </NextLink>
   )

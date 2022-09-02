@@ -29,27 +29,31 @@ export default function Home(props) {
 
             <nav className={clsx("flex flex-col", delayEntrance)}>
               <Link
-                content="📰 About."
+                content="About."
                 destination="/about"
                 animated={true}
+                icon="newspaper"
               />
 
               <Link
-                content="💻 Projects."
+                content="Projects."
                 destination="/projects"
                 animated={true}
+                icon="laptop"
               />
 
               <Link
-                content="📖 Garden."
+                content="Garden."
                 destination="https://svaught-garden.netlify.app"
                 animated={true}
+                icon="books"
               />
 
               <Link
-                content="✉️ Contact."
+                content="Contact."
                 destination="/contact"
                 animated={true}
+                icon="email"
               />
             </nav>
           </HeroLayout>
