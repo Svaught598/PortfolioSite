@@ -24,7 +24,7 @@ jobs:
       
       - name: Copy Important Files
         shell: bash
-        run: mv -f ./copy/* ./copy/.* ./out
+        run: (mv -f ./copy/* ./copy/.* ./out) || true
       
       - name: Pushes build to Github Pages repo
         uses: cpina/github-action-push-to-another-repository@main
