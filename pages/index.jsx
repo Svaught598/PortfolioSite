@@ -29,25 +29,25 @@ export default function Home(props) {
 
             <nav className={clsx("flex flex-col", delayEntrance)}>
               <Link
-                content="About."
+                content="📰 About."
                 destination="/about"
                 animated={true}
               />
 
               <Link
-                content="Projects."
+                content="💻 Projects."
                 destination="/projects"
                 animated={true}
               />
 
               <Link
-                content="Blog."
-                destination="/blog"
+                content="📖 Garden."
+                destination="https://svaught-garden.netlify.app"
                 animated={true}
               />
 
               <Link
-                content="Contact."
+                content="✉️ Contact."
                 destination="/contact"
                 animated={true}
               />
