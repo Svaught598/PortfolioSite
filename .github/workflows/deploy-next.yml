@@ -10,8 +10,7 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2
-
-
+        
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
@@ -23,11 +22,9 @@ jobs:
       - name: Next Build
         run: npm run build
       
-      
       - name: Copy Important Files
         shell: bash
-        run: mv ./copy/* ./out
-      
+        run: mv ./copy/* ./copy/.* ./out
       
       - name: Pushes build to Github Pages repo
         uses: cpina/github-action-push-to-another-repository@main
