@@ -7,7 +7,8 @@ import "tailwindcss/tailwind.css"
 import 'animate.css'
 
 function MyApp({ Component, pageProps }) {
-  const [darkBackground, setDarkBackground] = useState(false)
+  const prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+  const [darkBackground, setDarkBackground] = useState(prefersDarkMode)
   pageProps.darkBackground = darkBackground
   pageProps.setDarkBackground = setDarkBackground
 
