@@ -44,7 +44,7 @@ export default function Home(props) {
 
               <Link
                 content="Garden."
-                destination="https://svaught-garden.netlify.app"
+                destination="https://garden.svaught.com"
                 animated={true}
                 icon="books"
               />
