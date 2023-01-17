@@ -1,100 +1,38 @@
 @font-face {
-    font-family: 'amity_jackregular';
-    src: url('../public/amity_jack-webfont.woff2') format('woff2'), url('../public/amity_jack-webfont.woff') format('woff');
+    font-family: 'sniglet';
     font-weight: normal;
     font-style: normal;
+    src: 
+        url('../public/sniglet-master/webfonts/Sniglet-webfont.woff') format('woff'), 
+        url('../public/sniglet-master/webfonts/Sniglet-webfont.ttf') format('truetype'),
+        url('../public/sniglet-master/webfonts/Sniglet-webfont.eot') format('eot'),
+        url('../public/sniglet-master/webfonts/Sniglet-webfont.svg') format('svg');
+}
+@font-face {
+    font-family: 'bungee';
+    font-weight: normal;
+    font-style: normal;
+    src: url('../public/Bungee-Regular.ttf') format('truetype');
+}
+@font-face {
+    font-family: 'exo';
+    font-weight: normal;
+    font-style: normal;
+    src: url('../public/exo.ttf') format('truetype');
 }
 
 html,
 body {
-    background: var(--charcoal) !important;
+    scroll-behavior: smooth;
     height: 100%;
     padding: 0;
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
 }
 
-.main {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
-    width: 100%;
-}
-
-.logoFont {
-    font-family: 'amity_jackregular', Arial, sans-serif;
-    font-weight: normal;
-    font-style: normal;
-    font-size: 3em;
-    font-style: normal;
-    text-decoration: none;
-}
-
-@media (min-width: 640px) {
-    .projectCard {
-        height: 24rem;
-    }
-}
-
-@media (min-width: 768px) {
-    .projectCard {
-        height: 30rem;
-    }
-}
-
-
-/* Links */
-
-.link {
-    @apply text-burnt-sienna;
-    font-style: normal;
-    font-weight: bolder;
-    text-decoration: none;
-}
-
-.link:hover {
-    @apply text-sandy-brown;
-}
-
-.link-xl {
-    @apply text-burnt-sienna;
-    font-size: 1.25rem;
-    font-style: normal;
-    font-weight: bolder;
-    text-decoration: none;
-}
-
-.link-xl:hover {
-    @apply text-sandy-brown;
-}
-
-.delay04 {
-    animation-delay: .4s
-}
-
-.color-transition {
-    transition: all .4s ease-in-out;
-}
-
-.grow {
-    transition: all .4s ease-in-out;
-}
-
-.grow:hover {
-    transform: scale(1.05);
-}
-
-.orange-on-hover:hover {
-    @apply bg-sandy-brown;
-}
-
-.underline {
-    text-decoration: underline;
-}
-
-/* Custom Scrollbar */
+/**
+ * Custom Scrollbar
+ */
 ::-webkit-scrollbar {
     width: 4px;
     height: 4px;
@@ -109,3 +47,12 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: #555; 
 }
+
+/*
+ * FontAwesome on page refresh and after some interaction oversizing issue workaround.
+ * @see https://github.com/FortAwesome/react-fontawesome/issues/134
+ */
+ .svg-inline--fa {
+    height: 1em;
+    vertical-align: -0.125em;
+  }

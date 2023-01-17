@@ -3,16 +3,34 @@ module.exports = {
     darkMode: false, // or 'media' or 'class'
     theme: {
         extend: {
+            gridTemplateColumns: {
+                '64': 'repeat(64, minmax(0, 1fr))',
+            },
+            height: {
+                '192': '48rem',
+            },
+            fontFamily: {
+                'sniglet': ['"sniglet"', 'Arial', 'sans-serif'],
+                'amity': ['"amity"', 'Arial', 'sans-serif'],
+                'bungee': ['"bungee"', 'Arial', 'sans-serif'],
+                'exo': ['"exo"', 'Arial', 'sans-serif'],
+            },
+            borderWidth: {
+                '16': '16px'
+            },
             colors: {
                 'charcoal': '#264653ff',
                 'charcoal-light': '#286065',
                 'charcoal-lighter': '#257575',
-                
                 'persian-green': '#2a9d8fff',
                 'orange-yellow-crayola': '#e9c46aff',
                 'sandy-brown': '#f4a261ff',
                 'burnt-sienna': '#e76f51ff',
-                'gray': '#292929',
+                'gray': '#f0f0f0ff',
+
+                // pixel art only
+                'dark-brown': '#553717',
+                'brown': '#663f16',
             },
         },
     },

@@ -1,14 +1,18 @@
 import React from 'react'
 import Head from 'next/head'
-import clsx from 'clsx';
+import Header from 'components/landing/Header';
+import Hero from 'components/landing/Hero';
+import About from 'components/landing/About';
+import Contact from 'components/landing/Contact';
+import Footer from 'components/landing/Footer';
+import Projects from 'components/landing/Projects';
 
-import Link from 'components/ui/Link.jsx'
-import HeaderLayout from 'components/layout/HeaderLayout.jsx';
-import { HeroLayout, HeroHeader } from 'components/layout/HeroLayout.jsx';
+import { promises as fs } from 'fs'
+import path from 'path'
+import grayMatter from 'gray-matter'
 
 
-export default function Home(props) {
-  const delayEntrance = "animate__animated animate__fadeInUp delay04"
+export default function Home({ projects }) {
   
   return (
     <>
@@ -18,47 +22,44 @@ export default function Home(props) {
         <link rel="icon" href="images/favicon.ico" />
       </Head>
 
-      <div className="main container mx-auto w-75">
-        <HeaderLayout { ...props } />
-        <main className="w-11/12 mx-auto h-50">
-          <HeroLayout>
-            <HeroHeader>
-              <span>My Name is <span className="text-persian-green">Steven Vaught.</span></span>
-              <span>I am a <span className="text-sandy-brown">Software Developer.</span></span>
-            </HeroHeader>
 
-            <nav className={clsx("flex flex-col", delayEntrance)}>
-              <Link
-                content="About."
-                destination="/about"
-                animated={true}
-                icon="newspaper"
-              />
-
-              <Link
-                content="Projects."
-                destination="/projects"
-                animated={true}
-                icon="laptop"
-              />
-
-              <Link
-                content="Garden."
-                destination="https://garden.svaught.com"
-                animated={true}
-                icon="books"
-              />
-
-              <Link
-                content="Contact."
-                destination="/contact"
-                animated={true}
-                icon="email"
-              />
-            </nav>
-          </HeroLayout>
-        </main>
-      </div>
+      <Header />
+      <Hero />
+      <About />
+      <Projects projects={projects} />
+      <Contact />
+      <Footer />
     </>
   )
+}
+
+export async function getStaticProps() {
+  const projectsDir = path.join(process.cwd(), 'pages/projects');
+  const filenames = await fs.readdir(projectsDir)
+
+  const files = await Promise.all(filenames.map(async filename => {
+    const filePath = path.join(projectsDir, filename);
+    const content = await fs.readFile(filePath, 'utf8');
+    const matter = grayMatter(content);
+    return {
+      filename, 
+      matter
+    }
+  }))
+
+  const projects = files.map(file => {
+    return {
+      path: `/projects/${file.filename.replace('.mdx', '')}`,
+      title: file.matter.data.title,
+      description: file.matter.data.description,
+      githubLink: file.matter.data.githubLink,
+      imageLink: file.matter.data.imageLink,
+    }
+  })
+
+  return {
+    props: {
+      projects,
+    }
+  }
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import ParticleBackground from '../components/ui/ParticleBackground.jsx'
 import { str2bool } from 'utils';
+import { AnimatePresence } from 'framer-motion/dist/framer-motion.js'
 
 import '../styles/globals.css'
 import "tailwindcss/tailwind.css"
@@ -22,10 +22,7 @@ function MyApp({ Component, pageProps }) {
   }, [darkBackground])
 
   return (
-    <>
-      <Component {...pageProps} />
-      <ParticleBackground darkMode={darkBackground} />
-    </>
+    <Component {...pageProps} />
   )
 }
 
