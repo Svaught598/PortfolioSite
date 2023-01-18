@@ -19,6 +19,7 @@ export default function Home({ projects }) {
       <Head>
         <title>Steven Vaught</title>
         <meta name="description" content="Portfolio Site of Steven Vaught" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="images/favicon.ico" />
       </Head>
 
