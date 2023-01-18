@@ -34,7 +34,7 @@ body {
 /**
  * Custom Scrollbar
  */
-::-webkit-scrollbar {
+/* ::-webkit-scrollbar {
     width: 4px;
     height: 4px;
 }
@@ -47,7 +47,7 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
     background: #555; 
-}
+} */
 
 /*
  * FontAwesome on page refresh and after some interaction oversizing issue workaround.

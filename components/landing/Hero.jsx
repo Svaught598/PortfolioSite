@@ -11,9 +11,9 @@ export default function Hero() {
     }, 500), []);
 
   return (
-    <section id="hero" className="w-10/12 h-192 mx-auto flex flex-row justify-center items-center relative opacity-0 transition-opacity duration-500 ease-in">
+    <section id="hero" className="w-full md:w-10/12 md:h-192 mx-auto flex flex-col-reverse md:grid md:grid-cols-2 mt-12 md:mt-0 justify-center items-center relative opacity-0 transition-opacity duration-500 ease-in">
         { show ? <MeCoding /> : <div /> }
-        <div className='flex-1 w-full flex flex-col items-end '>
+        <div className='flex-1 w-full flex flex-col items-end mb-12 md:mb-0 px-4 md:px-0'>
           <h2 className="flex-1 text-4xl pl-8 py-4 relative z-10 font-bungee">
             <span className='absolute w-1 left-0 top-0 h-full bg-charcoal'></span>
             <span className='absolute w-1 left-1 top-0 h-full bg-charcoal-light'></span>
