@@ -38,7 +38,7 @@ export default function Header() {
                 </a>
             ))
         }
-        <Link href="#about-section"><a className='ml-4 rounded-xl bg-persian-green text-white py-3 px-5 text-lg font-bungee transition-color hover:bg-charcoal-lighter duration-300 ease-in-out flex flex-row items-center'>
+        <Link href="#contact-section"><a className='ml-4 rounded-xl bg-persian-green text-white py-3 px-5 text-lg font-bungee transition-color hover:bg-charcoal-lighter duration-300 ease-in-out flex flex-row items-center'>
           <FontAwesomeIcon icon={faEnvelope} className='mr-4'/>
           Talk to Me
         </a></Link>

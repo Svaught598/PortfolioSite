@@ -10,7 +10,7 @@ export default function Contact() {
     ]
 
   return (
-    <section className="h-192 bg-white flex flex-col justify-between">
+    <section id="contact-section" className="h-192 bg-white flex flex-col justify-between">
       <div className="w-10/12 mx-auto flex flex-row items-start pt-24">
         <h2 className='flex-1 font-bungee text-persian-green text-5xl'>
           Contact
