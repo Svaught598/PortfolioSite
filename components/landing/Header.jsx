@@ -76,9 +76,12 @@ export default function Header() {
       </div>
 
       <nav id="sidenav" className='w-56 transform translate-x-56 h-screen absolute right-0 top-0 bg-white shadow-2xl transition-all duration-500 ease-in-out flex flex-col'>
-        <button className='flex flex-row items-center' onClick={() => closeNav()}>
-          <FontAwesomeIcon icon={faWindowClose} className='ml-auto my-4 mx-4 text-3xl text-persian-green text-right' />
+
+        <button onClick={() => closeNav()} className='m-4 rounded-xl flex flex-row items-center bg-white text-persian-green py-3 px-5 text-lg font-bungee transition-color hover:text-charcoal-lighter duration-300 ease-in-out border-2 border-persian-green hover:border-charcoal-lighter justify-center'>
+          <FontAwesomeIcon icon={faWindowClose} className='mr-4'/>
+          Close
         </button>
+
         <div className='flex flex-row justify-between mx-4 my-2'>
           {
             links.map(l => (
@@ -93,19 +96,19 @@ export default function Header() {
           }
         </div>
         <Link href="#contact-section">
-          <a className='mx-4 my-2 rounded-xl bg-persian-green text-white py-3 px-5 text-lg font-bungee transition-color hover:bg-charcoal-lighter duration-300 ease-in-out flex flex-row items-center'>
+          <a onClick={() => closeNav()} className='mx-4 justify-center my-2 rounded-xl bg-persian-green text-white py-3 px-5 text-lg font-bungee transition-color hover:bg-charcoal-lighter duration-300 ease-in-out flex flex-row items-center'>
             <FontAwesomeIcon icon={faEnvelope} className='mr-4'/>
             Talk to Me
           </a>
         </Link>
         <Link href="https://garden.svaught.com">
-          <a className='mx-4 my-2 rounded-xl bg-persian-green text-white py-3 px-5 text-lg font-bungee transition-color hover:bg-charcoal-lighter duration-300 ease-in-out flex flex-row items-center'>
+          <a className='mx-4 justify-center my-2 rounded-xl bg-persian-green text-white py-3 px-5 text-lg font-bungee transition-color hover:bg-charcoal-lighter duration-300 ease-in-out flex flex-row items-center'>
             <FontAwesomeIcon icon={faBook} className='mr-4'/>
             Garden
           </a>
         </Link>
         <Link href="https://svaught.com/resume.pdf">
-        <a className='mx-4 my-2 rounded-xl bg-persian-green text-white py-3 px-5 text-lg font-bungee transition-color hover:bg-charcoal-lighter duration-300 ease-in-out flex flex-row items-center'>
+        <a className='mx-4 justify-center my-2 rounded-xl bg-persian-green text-white py-3 px-5 text-lg font-bungee transition-color hover:bg-charcoal-lighter duration-300 ease-in-out flex flex-row items-center'>
             <FontAwesomeIcon icon={faFile} className='mr-4'/>
             Resumè
           </a>
