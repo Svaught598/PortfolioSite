@@ -19,7 +19,6 @@ export default function Header() {
   }
   const showNav = (e) => {
     document.getElementById('sidenav').classList.remove('translate-x-56');
-    console.log("show", e);
     e.stopPropagation();
   }
 
@@ -28,12 +27,18 @@ export default function Header() {
       document.getElementById('header').classList.remove('opacity-0');
     }, 500);
 
+    window.addEventListener('scroll', (e) => {
+      console.log(window.scrollY);
+      const header = document.getElementById('header');
+      if (window.scrollY > 64) header.classList.add('shadow-2xl')
+      else header.classList.remove('shadow-2xl')
+    });
     window.addEventListener('click', closeNav, false);
     return () => window.removeEventListener('click', closeNav, false);
   }, []);
   
   return (
-    <header id="header" className="px-4 md:px-12 lg:px-24 sticky top-0 shadow-xl flex justify-between items-center h-16 md:h-24 opacity-0 z-50 bg-white">
+    <header id="header" className="px-4 md:px-12 lg:px-24 sticky top-0 flex justify-between items-center h-16 md:h-24 opacity-0 z-50 bg-white transition-shadow duration-500 ease-in-out">
       <Link href="/">
         <a className="font-bungee">
           <span className="text-persian-green text-4xl md:text-6xl xl:text-6xl">S</span>
@@ -81,7 +86,7 @@ export default function Header() {
           Close
         </button>
 
-        <h3 className='text-2xl px-4 pt-4 font-bungee text-burnt-sienna'>Social</h3>
+        <h3 className='text-2xl px-4 pt-4 font-bungee text-charcoal-light'>Social</h3>
         <div className='flex flex-row justify-between mx-4 my-2'>
           {
             links.map(l => (
@@ -95,21 +100,21 @@ export default function Header() {
           }
         </div>
 
-        <h3 className='text-2xl px-4 pt-4 font-bungee text-burnt-sienna'>Other</h3>
+        <h3 className='text-2xl px-4 pt-4 font-bungee text-charcoal-light'>Other</h3>
         <Link href="#contact-section">
-          <a onClick={() => closeNav()} className='mx-4 justify-center my-2 rounded-xl bg-persian-green text-white py-3 px-5 text-lg font-bungee transition-color hover:bg-charcoal-lighter duration-300 ease-in-out flex flex-row items-center'>
+          <a onClick={() => closeNav()} className='mx-4 justify-center my-2 rounded-xl bg-persian-green text-white py-3 px-5 text-lg font-bungee transition-color flex flex-row items-center'>
             <FontAwesomeIcon icon={faEnvelope} className='mr-4'/>
             Talk to Me
           </a>
         </Link>
         <Link href="https://garden.svaught.com">
-          <a className='mx-4 justify-center my-2 rounded-xl bg-persian-green text-white py-3 px-5 text-lg font-bungee transition-color hover:bg-charcoal-lighter duration-300 ease-in-out flex flex-row items-center'>
+          <a className='mx-4 justify-center my-2 rounded-xl bg-persian-green text-white py-3 px-5 text-lg font-bungee transition-color flex flex-row items-center'>
             <FontAwesomeIcon icon={faBook} className='mr-4'/>
             Garden
           </a>
         </Link>
         <Link href="https://svaught.com/resume.pdf">
-        <a className='mx-4 justify-center my-2 rounded-xl bg-persian-green text-white py-3 px-5 text-lg font-bungee transition-color hover:bg-charcoal-lighter duration-300 ease-in-out flex flex-row items-center'>
+        <a className='mx-4 justify-center my-2 rounded-xl bg-persian-green text-white py-3 px-5 text-lg font-bungee transition-color flex flex-row items-center'>
             <FontAwesomeIcon icon={faFile} className='mr-4'/>
             Resumè
           </a>
