@@ -11,22 +11,22 @@ export default function Contact() {
 
   return (
     <section id="contact-section" className="bg-white flex flex-col justify-between">
-      <div className="w-10/12 mx-auto flex flex-col md:flex-row items-start pt-12 md:pt-24">
-        <h2 className='flex-1 font-bungee text-persian-green text-3xl pb-12 md:p-0 md:text-5xl'>
+      <div className="w-10/12 sm:w-8/12 lg:w-10/12 mx-auto flex flex-col lg:flex-row items-start pt-12 lg:pt-24">
+        <h2 className='flex-1 font-bungee text-persian-green text-3xl pb-12 lg:p-0 lg:text-5xl'>
           Contact
         </h2>
         <div className='flex-1'>
-            <p className='text-left md:text-right font-exo font-bold text-sm md:text-xl text-charcoal mb-6 md:mb-12'>
+            <p className='text-left lg:text-right font-exo font-bold text-sm md:text-md lg:text-xl text-charcoal mb-6 lg:mb-12'>
                 Shoot me an email, or a DM, or a friend request, or a carrier pidgeon, just do SOMETHING.
                 I've even got this handy form here to make it easy.
             </p>
-            <p className='text-left md:text-right font-exo font-bold text-sm md:text-xl text-charcoal mb-6 md:mb-12'>
+            <p className='text-left lg:text-right font-exo font-bold text-sm md:text-md lg:text-xl text-charcoal mb-6 lg:mb-12'>
             Let's work together and make some magic happen!
             </p>
         </div>
       </div>
 
-      <form className='w-11/12 md:w-6/12 mx-auto flex flex-col' name="contact" method="POST" action="https://formspree.io/Svaught598@gmail.com"  >
+      <form className='w-11/12 sm:w-8/12 lg:w-6/12 mx-auto flex flex-col' name="contact" method="POST" action="https://formspree.io/Svaught598@gmail.com"  >
         <div className='w-full pb-4'>
             <label className="sr-only" htmlFor="inputName">Name</label>
             <input className='w-full bg-gray text-charcoal p-4 border-rounded-xl' type="text" name="name" id="inputName" placeholder="Name" required />

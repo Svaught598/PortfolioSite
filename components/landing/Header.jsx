@@ -38,11 +38,11 @@ export default function Header() {
   }, []);
   
   return (
-    <header id="header" className="px-4 md:px-12 lg:px-24 sticky top-0 flex justify-between items-center h-16 md:h-24 opacity-0 z-50 bg-white transition-shadow duration-500 ease-in-out">
+    <header id="header" className="px-4 md:px-12 lg:px-24 sticky top-0 flex justify-between items-center h-16 md:h-20 lg:h-24 opacity-0 z-50 bg-white transition-shadow duration-500 ease-in-out">
       <Link href="/">
         <a className="font-bungee">
-          <span className="text-persian-green text-4xl md:text-6xl xl:text-6xl">S</span>
-          <span className="text-burnt-sienna text-4xl md:text-6xl xl:text-6xl">V</span>
+          <span className="text-persian-green text-4xl md:text-4xl xl:text-6xl">S</span>
+          <span className="text-burnt-sienna text-4xl md:text-4xl xl:text-6xl">V</span>
         </a>
       </Link>
 

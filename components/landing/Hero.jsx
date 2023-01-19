@@ -4,16 +4,17 @@ import MeCoding from '../ui/MeCoding'
 export default function Hero() {
   const [show, setShow] = useState(false);
 
-  useEffect(() =>
+  useEffect(() => {
     setTimeout(() => {
       document.getElementById('hero').classList.remove('opacity-0');
       setShow(true);
-    }, 500), []);
+    }, 500)
+  }, []);
 
   return (
-    <section id="hero" className="w-full md:w-10/12 md:h-192 mx-auto flex flex-col-reverse md:grid md:grid-cols-2 mt-12 md:mt-0 justify-center items-center relative opacity-0 transition-opacity duration-500 ease-in">
+    <section id="hero" className="w-full md:w-12/12 lg:w-10/12 lg:h-192 mx-auto flex flex-col-reverse lg:grid lg:grid-cols-2 mt-12 lg:mt-0 justify-center items-center relative opacity-0 transition-opacity duration-500 ease-in">
         { show ? <MeCoding /> : <div /> }
-        <div className='flex-1 w-full flex flex-col items-end mb-12 md:mb-0 px-4 md:px-0'>
+        <div className='flex-1 w-full flex flex-col items-center lg:items-end mb-12 lg:mb-0 px-4 lg:px-0'>
           <h2 className="flex-1 text-4xl pl-8 py-4 relative z-10 font-bungee">
             <span className='absolute w-1 left-0 top-0 h-full bg-charcoal'></span>
             <span className='absolute w-1 left-1 top-0 h-full bg-charcoal-light'></span>
