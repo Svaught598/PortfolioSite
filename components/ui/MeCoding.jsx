@@ -32,13 +32,15 @@ export default function MeCoding() {
   }, [])
   
     return (
-      <div className='flex-1 pb-12 md:pb-0'>
+      <div className='flex-1 pb-12 px-4 md:p-0'>
         <div className='flex flex-row justify-center items-center py-4 border-16 border-charcoal bg-gradient-to-br from-persian-green bg-charcoal-lighter rounded-3xl'>
           <div id="pixel-art" className="anime grid grid-cols-64 opacity-0">
             { meCoding.map((pixel,i) => <div key={i} className="w-1 h-1 md:w-2 md:h-2 el" style={{ backgroundColor: pixel, marginRight: "1px", marginBottom: "1px" }} />)}
           </div>
         </div>
-        <a className='text-sm text-charcoal font-exo font-black text-center'>*Actual photograph of me with a hard problem!</a>
+        <div className='w-full'>
+          <a className='block text-sm mx-auto mt-2 text-charcoal font-exo font-black text-center'>Actual photograph of me working!</a>
+        </div>
       </div>
     );
   };

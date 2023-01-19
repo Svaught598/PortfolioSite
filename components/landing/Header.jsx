@@ -76,25 +76,26 @@ export default function Header() {
       </div>
 
       <nav id="sidenav" className='w-56 transform translate-x-56 h-screen absolute right-0 top-0 bg-white shadow-2xl transition-all duration-500 ease-in-out flex flex-col'>
-
         <button onClick={() => closeNav()} className='m-4 rounded-xl flex flex-row items-center bg-white text-persian-green py-3 px-5 text-lg font-bungee transition-color hover:text-charcoal-lighter duration-300 ease-in-out border-2 border-persian-green hover:border-charcoal-lighter justify-center'>
           <FontAwesomeIcon icon={faWindowClose} className='mr-4'/>
           Close
         </button>
 
+        <h3 className='text-2xl px-4 pt-4 font-bungee text-burnt-sienna'>Social</h3>
         <div className='flex flex-row justify-between mx-4 my-2'>
           {
             links.map(l => (
               <a href={l.url} className='p-2 text-4xl'>
                   <FontAwesomeIcon
                       icon={ l.icon }
-                      color='#e76f51ff'
-                      className='transition-color hover:text-orange-yellow-crayola duration-300 ease-in-out'
+                      className='text-persian-green'
                   />
               </a>
             ))
           }
         </div>
+
+        <h3 className='text-2xl px-4 pt-4 font-bungee text-burnt-sienna'>Other</h3>
         <Link href="#contact-section">
           <a onClick={() => closeNav()} className='mx-4 justify-center my-2 rounded-xl bg-persian-green text-white py-3 px-5 text-lg font-bungee transition-color hover:bg-charcoal-lighter duration-300 ease-in-out flex flex-row items-center'>
             <FontAwesomeIcon icon={faEnvelope} className='mr-4'/>

@@ -18,13 +18,13 @@ export default function ProjectCard({ project }) {
                     className="w-full h-64 object-cover"
                     src={ require(`../../public${ imageLink }`) }
                 />
-                <h3 className="text-3xl font-bungee text-charcoal p-4 pb-0 flex flex-row items-center justify-between">
+                <h3 className="text-xl md:text-3xl font-bungee text-charcoal px-4 py-2 md:p-4 pb-0 flex flex-row items-center justify-between">
                     { title }
                     <a href={ githubLink }>
                         <FontAwesomeIcon icon={ faGithub } className="" fill="black"/>
                     </a>
                 </h3>
-                <p className="text-xl font-exo text-charcoal p-4">{ description }</p>
+                <p className="text-sm md:text-xl font-exo text-charcoal p-4">{ description }</p>
             </div>
         </a>
     )

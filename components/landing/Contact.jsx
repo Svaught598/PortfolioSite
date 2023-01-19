@@ -11,22 +11,22 @@ export default function Contact() {
 
   return (
     <section id="contact-section" className="bg-white flex flex-col justify-between">
-      <div className="w-10/12 mx-auto flex flex-row items-start pt-24">
-        <h2 className='flex-1 font-bungee text-persian-green text-5xl'>
+      <div className="w-10/12 mx-auto flex flex-col md:flex-row items-start pt-12 md:pt-24">
+        <h2 className='flex-1 font-bungee text-persian-green text-3xl pb-12 md:p-0 md:text-5xl'>
           Contact
         </h2>
-        <div className='flex-1 text-right'>
-            <p className='text-right font-exo font-bold text-xl text-charcoal mb-12'>
+        <div className='flex-1'>
+            <p className='text-left md:text-right font-exo font-bold text-sm md:text-xl text-charcoal mb-6 md:mb-12'>
                 Shoot me an email, or a DM, or a friend request, or a carrier pidgeon, just do SOMETHING.
                 I've even got this handy form here to make it easy.
             </p>
-            <p className='text-right font-exo font-bold text-xl text-charcoal mb-12'>
+            <p className='text-left md:text-right font-exo font-bold text-sm md:text-xl text-charcoal mb-6 md:mb-12'>
             Let's work together and make some magic happen!
             </p>
         </div>
       </div>
 
-      <form className='w-6/12 mx-auto flex flex-col' name="contact" method="POST" action="https://formspree.io/Svaught598@gmail.com"  >
+      <form className='w-11/12 md:w-6/12 mx-auto flex flex-col' name="contact" method="POST" action="https://formspree.io/Svaught598@gmail.com"  >
         <div className='w-full pb-4'>
             <label className="sr-only" htmlFor="inputName">Name</label>
             <input className='w-full bg-gray text-charcoal p-4 border-rounded-xl' type="text" name="name" id="inputName" placeholder="Name" required />
@@ -42,11 +42,11 @@ export default function Contact() {
             <textarea className='w-full bg-gray text-charcoal p-4 border-rounded-xl' name="message" id="inputMessage" rows="5" placeholder="Message" required></textarea>
         </div>
 
-        <div className="w-full flex flex-row justify-between items-center pb-24">
+        <div className="w-full flex flex-row justify-between items-center pb-12 md:pb-24">
             <div className='flex flex-row justify-center'>
             {
                 links.map(l => (
-                    <a href={l.url} className='p-2 text-5xl'>
+                    <a href={l.url} className='p-2 text-2xl md:text-5xl'>
                         <FontAwesomeIcon
                             icon={ l.icon }
                             className='transition-color text-persian-green hover:text-charcoal-lighter duration-300 ease-in-out'
@@ -55,11 +55,9 @@ export default function Contact() {
                 ))
             }
             </div>
-            <button type="submit" className='p-4 px-12 bg-persian-green hover:bg-charcoal-lighter duration-300 transition-colors text-white font-bungee rounded-xl'>Send</button>
+            <button type="submit" className='text-sm md:text-lg p-2 md:p-4 px-12 bg-persian-green hover:bg-charcoal-lighter duration-300 transition-colors text-white font-bungee rounded-xl'>Send</button>
         </div>
     </form>
-
-
     </section>
   );
 }
