@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import ProjectCard from '../ui/ProjectCard';
 
 export default function Projects({ projects }) {
-  console.log(projects)
-
   return (
     <section className="bg-gray">
       <div className="w-10/12 sm:w-8/12 lg:w-10/12 mx-auto flex flex-col lg:flex-row items-start py-12 lg:pt-24">

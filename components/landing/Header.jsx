@@ -28,7 +28,6 @@ export default function Header() {
     }, 500);
 
     window.addEventListener('scroll', (e) => {
-      console.log(window.scrollY);
       const header = document.getElementById('header');
       if (window.scrollY > 64) header.classList.add('shadow-2xl')
       else header.classList.remove('shadow-2xl')
