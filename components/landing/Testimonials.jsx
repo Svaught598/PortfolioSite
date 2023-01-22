@@ -25,7 +25,6 @@ export default function Testimonials() {
     },
   ];
 
-
   return (
     <section id="testimonials-section" className="bg-gradient-to-br from-charcoal to-persian-green h-screen">
       <h2 className="w-10/12 sm:w-8/12 lg:w-10/12 mx-auto text-center pt-12 lg:pt-24 font-bungee text-sandy-brown text-3xl lg:p-0 lg:text-5xl z-50">
