@@ -46,7 +46,7 @@ export default function Contact() {
             <div className='flex flex-row justify-center'>
             {
                 links.map(l => (
-                    <a href={l.url} className='p-2 text-2xl md:text-5xl'>
+                    <a key={l.url} href={l.url} className='p-2 text-2xl md:text-5xl'>
                         <FontAwesomeIcon
                             icon={ l.icon }
                             className='transition-color text-persian-green hover:text-charcoal-lighter duration-300 ease-in-out'

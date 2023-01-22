@@ -1,19 +1,18 @@
 import React, { useEffect } from 'react'
 import Head from 'next/head'
-import Header from 'components/landing/Header';
-import Hero from 'components/landing/Hero';
-import About from 'components/landing/About';
-import Contact from 'components/landing/Contact';
-import Footer from 'components/landing/Footer';
-import Projects from 'components/landing/Projects';
-
 import { promises as fs } from 'fs'
 import path from 'path'
 import grayMatter from 'gray-matter'
 
+import Header from '../components/landing/Header';
+import Hero from '../components/landing/Hero';
+import About from '../components/landing/About';
+import Contact from '../components/landing/Contact';
+import Footer from '../components/landing/Footer';
+import Projects from '../components/landing/Projects';
+import Testimonials from '../components/landing/Testimonials';
 
 export default function Home({ projects }) {
-
   useEffect(() => {
     console.log(`%c
 ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠋⢹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
@@ -73,6 +72,7 @@ export default function Home({ projects }) {
       <Hero />
       <About />
       <Projects projects={projects} />
+      <Testimonials />
       <Contact />
       <Footer />
     </>

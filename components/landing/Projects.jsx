@@ -16,7 +16,7 @@ export default function Projects({ projects }) {
         </div>
       </div>
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 w-11/12 sm:w-8/12 md:w-10/12 mx-auto pb-12 md:px-24 lg:p-24'>
-        { projects.map(p => <ProjectCard project={p} />)}
+        { projects.map(p => <ProjectCard key={p.title} project={p} />)}
       </div>
     </section>
   );

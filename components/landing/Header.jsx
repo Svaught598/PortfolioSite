@@ -48,7 +48,7 @@ export default function Header() {
       <div className="mt-2 flex flex-row items-center">
         {
             links.map(l => (
-                <a href={l.url} className='hidden lg:block p-2 text-4xl'>
+                <a key={l.url} href={l.url} className='hidden lg:block p-2 text-4xl'>
                     <FontAwesomeIcon
                         icon={ l.icon }
                         color='#e76f51ff'
@@ -89,7 +89,7 @@ export default function Header() {
         <div className='flex flex-row justify-between mx-4 my-2'>
           {
             links.map(l => (
-              <a href={l.url} className='p-2 text-4xl'>
+              <a key={l.url} href={l.url} className='p-2 text-4xl'>
                   <FontAwesomeIcon
                       icon={ l.icon }
                       className='text-persian-green'
