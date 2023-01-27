@@ -4,6 +4,11 @@ import Carousel from '../ui/Carousel';
 export default function Testimonials() {
   const testimonials = [
     {
+      text: "It'll cook out.", 
+      author: "My Mom", 
+      title: "Registered Nurse",
+    },
+    {
       text: "Steven has been an incredible mentor! My development ability has gotten immeasurably better since I started working with him.", 
       author: "Jacob Pixler", 
       title: "Software Developer",
