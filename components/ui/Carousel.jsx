@@ -33,6 +33,7 @@ export default function Carousel({ items }) {
     items: items.map((i) => ({
       renderItem: (
         <CarouselItem
+          key={i.title}
           text={i.text}
           author={i.author}
           title={i.title}
@@ -65,6 +66,7 @@ export default function Carousel({ items }) {
         { items.map((item,i) => {
           return (
             <button
+              key={i}
               className={ (activeItem === i) 
                 ? 'text-burnt-sienna px-4 duration-300 ease-in-out transition-colors'
                 : 'text-sandy-brown px-4 duration-300 ease-in-out transition-colors'

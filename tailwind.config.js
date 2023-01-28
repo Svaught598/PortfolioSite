@@ -10,8 +10,6 @@ module.exports = {
                 '192': '48rem',
             },
             fontFamily: {
-                'sniglet': ['"sniglet"', 'Arial', 'sans-serif'],
-                'amity': ['"amity"', 'Arial', 'sans-serif'],
                 'bungee': ['"bungee"', 'Arial', 'sans-serif'],
                 'exo': ['"exo"', 'Arial', 'sans-serif'],
             },
