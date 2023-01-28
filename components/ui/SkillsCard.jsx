@@ -4,7 +4,7 @@ import Tilt from 'react-parallax-tilt';
 export default function SkillsCard({ header, children }) {
     return (
         <Tilt
-            className="bg-white rotate-180 p-4 pl-12 relative h-full"
+            className="bg-white p-4 pl-12 relative h-full"
             gyroscope={true}
             style={{ transform: 'perspective(100px)', transformStyle: 'preserve-3d' }}
         >
