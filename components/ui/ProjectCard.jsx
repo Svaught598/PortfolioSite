@@ -9,7 +9,6 @@ export default function ProjectCard({ project }) {
     return (
         <Tilt
             className="bg-white pl-6 relative h-full"
-            gyroscope={true}
             style={{ transform: 'perspective(100px)', transformStyle: 'preserve-3d' }}
         >
             <span className='absolute w-1 left-0 top-0 h-full bg-charcoal'></span>

@@ -5,7 +5,6 @@ export default function SkillsCard({ header, children }) {
     return (
         <Tilt
             className="bg-white p-4 pl-12 relative h-full"
-            gyroscope={true}
             style={{ transform: 'perspective(100px)', transformStyle: 'preserve-3d' }}
         >
             <span className="opacity-0 left-0 top-0 h-full w-full z-50"></span>
