@@ -1,5 +1,4 @@
 import React from 'react';
-import Image from 'next/image';
 import meCoding from '../../sprites/me';
 import usePixelAnimation from '../../hooks/usePixelAnimation';
 
@@ -18,7 +17,6 @@ export default function MeCoding() {
         className="absolute top-0 bottom-0 left-0 right-0 rounded-full object-cover h-full w-full"
         src={ require('../../public/images/me-coding-bg.svg') }
       />
-      {/* <Image className='object-cover absolute top-0 rounded-full' src='/images/me-coding-bg.svg' layout='fill' /> */}
       <div className='flex flex-row justify-center items-center ' style={{ transformStyle: 'flat' }}>
         <div ref={ref} id="pixel-art" className="anime grid grid-cols-64 opacity-0" >
           { meCoding.map((pixel,i) => <div key={i} className="w-1 h-1 md:w-2 md:h-2 el" style={{ backgroundColor: pixel, marginRight: "1px", marginBottom: "1px" }} />)}
