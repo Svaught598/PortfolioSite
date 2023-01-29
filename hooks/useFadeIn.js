@@ -8,7 +8,7 @@ export default function useFadeIn() {
     setTimeout(() => {
       ref.current.classList.remove('opacity-0');
       setShow(true);
-    }, 500)
+    }, 500);
   }, []);
 
   return [ref, show];
