@@ -26,7 +26,7 @@ export default function Home({ projects }) {
 
         <meta property="og:title" content="Steven Vaught's Portfolio" />
         <meta property="og:description" content="Need a website built? Have a cat that needs to be watched? We offer these services and more! Visit now to see how we can help you achieve your dreams today." />
-        <meta property="og:type" content="website" />
+        <meta property="og:type" content="article" />
         <meta property="og:url" content="https://svaught.com" />
         <meta property="og:image" content="https://svaught.com/images/og-pic.png" />
       </Head>
