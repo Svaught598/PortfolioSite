@@ -20,9 +20,15 @@ export default function Home({ projects }) {
     <>
       <Head>
         <title>Steven Vaught</title>
-        <meta name="description" content="Portfolio Site of Steven Vaught" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="images/favicon.ico" />
+        <meta name="description" content="Steven Vaught's Porftolio" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <meta property="og:title" content="Steven Vaught's Portfolio" />
+        <meta property="og:description" content="Need a website built? Have a cat that needs to be watched? We offer these services and more! Visit now to see how we can help you achieve your dreams today." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://svaught.com" />
+        <meta property="og:image" content="images/favicon.ico" />
       </Head>
 
 
