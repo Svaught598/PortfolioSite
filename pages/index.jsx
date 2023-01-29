@@ -29,6 +29,10 @@ export default function Home({ projects }) {
         <meta property="og:type" content="article" />
         <meta property="og:url" content="https://svaught.com" />
         <meta property="og:image" content="https://svaught.com/images/og-pic.png" />
+
+        <meta property="twitter:title" content="Steven Vaught's Portfolio" />
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:image" content="https://svaught.com/images/og-pic.png" />
       </Head>
 
 
