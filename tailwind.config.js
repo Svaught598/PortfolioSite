@@ -8,6 +8,7 @@ module.exports = {
             },
             height: {
                 '192': '48rem',
+                'hero': '936px',
             },
             fontFamily: {
                 'bungee': ['"bungee"', 'Arial', 'sans-serif'],

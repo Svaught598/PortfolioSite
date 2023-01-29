@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDiscord, faGithub, faLinkedin } from '@fortawesome/free-brands-svg-icons';
 import { faEnvelope, faBars, faWindowClose, faBook, faFile } from '@fortawesome/free-solid-svg-icons';
+import useHeaderEffects from '../../hooks/useHeaderEffects';
 
 
 export default function Header() {
@@ -13,31 +14,19 @@ export default function Header() {
   ];
 
   const closeNav = (e) => {
-    if (!e) return document.getElementById('sidenav').classList.add('translate-x-56');
-    if (document.getElementById('sidenav').contains(e.target)) return;
-    document.getElementById('sidenav').classList.add('translate-x-56');
+    if (!e) return sidenav.current.classList.add('translate-x-56');
+    sidenav.current.classList.add('translate-x-56');
   }
+
   const showNav = (e) => {
-    document.getElementById('sidenav').classList.remove('translate-x-56');
+    sidenav.current.classList.remove('translate-x-56');
     e.stopPropagation();
   }
 
-  useEffect(() => {
-    setTimeout(() => {
-      document.getElementById('header').classList.remove('opacity-0');
-    }, 500);
-
-    window.addEventListener('scroll', (e) => {
-      const header = document.getElementById('header');
-      if (window.scrollY > 64) header.classList.add('shadow-2xl')
-      else header.classList.remove('shadow-2xl')
-    });
-    window.addEventListener('click', closeNav, false);
-    return () => window.removeEventListener('click', closeNav, false);
-  }, []);
+  const [header, sidenav] = useHeaderEffects();
   
   return (
-    <header id="header" className="px-4 md:px-12 lg:px-24 sticky top-0 flex justify-between items-center h-16 md:h-20 lg:h-24 opacity-0 z-50 bg-white transition-shadow duration-500 ease-in-out">
+    <header ref={header} className="px-4 md:px-12 lg:px-24 fixed left-0 right-0 top-0 flex justify-between items-center h-16 md:h-20 lg:h-24 opacity-0 z-50 transition-all duration-300 ease-in-out">
       <Link href="/">
         <a className="font-bungee">
           <span className="text-persian-green text-4xl md:text-4xl xl:text-6xl">S</span>
@@ -71,7 +60,7 @@ export default function Header() {
         </Link>
         <Link href="https://svaught.com/resume.pdf">
           <a className='hidden lg:block ml-4 rounded-xl bg-white text-persian-green py-3 px-5 text-lg font-bungee transition-color hover:text-charcoal-lighter duration-300 ease-in-out border-2 border-persian-green hover:border-charcoal-lighter'>
-            Resumè
+            Rèsumè
           </a>
         </Link>
         <button className='lg:hidden p-2 ml-12 text-3xl' onClick={(e) => showNav(e)}>
@@ -79,7 +68,7 @@ export default function Header() {
         </button>
       </div>
 
-      <nav id="sidenav" className='w-56 transform translate-x-56 h-screen absolute right-0 top-0 bg-white shadow-2xl transition-all duration-500 ease-in-out flex flex-col'>
+      <nav ref={sidenav} className='w-56 transform translate-x-56 h-screen absolute right-0 top-0 bg-white shadow-2xl transition-all duration-500 ease-in-out flex flex-col'>
         <button onClick={() => closeNav()} className='m-4 rounded-xl flex flex-row items-center bg-white text-persian-green py-3 px-5 text-lg font-bungee transition-color hover:text-charcoal-lighter duration-300 ease-in-out border-2 border-persian-green hover:border-charcoal-lighter justify-center'>
           <FontAwesomeIcon icon={faWindowClose} className='mr-4'/>
           Close
@@ -115,7 +104,7 @@ export default function Header() {
         <Link href="https://svaught.com/resume.pdf">
         <a className='mx-4 justify-center my-2 rounded-xl bg-persian-green text-white py-3 px-5 text-lg font-bungee transition-color flex flex-row items-center'>
             <FontAwesomeIcon icon={faFile} className='mr-4'/>
-            Resumè
+            Rèsumè
           </a>
         </Link>
       </nav>

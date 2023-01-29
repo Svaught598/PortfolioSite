@@ -1,36 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import SkillsCard from '../ui/SkillsCard';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import useTextSwap from '../../hooks/useTextSwap';
 
 export default function About() {
-  const [index, setIndex] = useState(0);
-  const roles = [
+  const [tagline, ref] = useTextSwap([
     "A Programmer",
     "A Designer",
     "A Mentor",
     "A Guitarist",
     "A Human",
     "🐈🐕💞"
-  ];
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      document.getElementById('role').classList.toggle('opacity-0');
-      setTimeout(() => {
-        setIndex(i => (i + 1 >= roles.length) ? 0 : i + 1)
-        document.getElementById('role').classList.toggle('opacity-0');
-      }, 500);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+  ]);
 
   return (
-    <section id="about-section" className="bg-gradient-to-br from-charcoal to-persian-green">
+    <section id="about-section" className="bg-gradient-to-b from-charcoal to-charcoal-lighter">
       <div className="w-10/12 sm:w-8/12 lg:w-10/12 mx-auto flex flex-col lg:flex-row items-start py-12 lg:py-24">
         <h2 className='flex-1 font-bungee text-sandy-brown text-3xl pb-12 lg:p-0 lg:text-5xl'>
           Hi, I'm Steven<br/>
-          <span id='role' className='text-orange-yellow-crayola transition-all ease-in-out duration-500'>{ roles[index] }</span>
+          <span ref={ref} className='text-orange-yellow-crayola transition-all ease-in-out duration-500'>{ tagline }</span>
         </h2>
         <div className='flex-1 text-right'>
           <p className='text-left lg:text-right font-exo font-black text-sm lg:text-xl text-orange-yellow-crayola mb-6 lg:mb-12'>
