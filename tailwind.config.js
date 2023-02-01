@@ -12,6 +12,12 @@ module.exports = {
             height: {
                 '192': '48rem',
                 'hero': '936px',
+                'pixel-big': '300px',
+                'pixel-small': '150px',
+            },
+            width: {
+                'pixel-big': '650px',
+                'pixel-small': '325px',
             },
             fontFamily: {
                 'bungee': ['"bungee"', 'Arial', 'sans-serif'],

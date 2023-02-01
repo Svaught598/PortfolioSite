@@ -14,7 +14,7 @@ export default function Hero() {
         </div>
       </div>
 
-      <div className='py-24 md:py-0 md:h-screen w-full md:w-12/12 lg:w-10/12 mx-auto flex flex-col-reverse lg:grid lg:grid-cols-2 mt-12 lg:mt-0 justify-center items-center '>
+      <div className='py-24 md:py-0 md:h-screen w-full md:w-12/12 lg:w-10/12 2xl:w-9/12 mx-auto flex flex-col-reverse lg:grid lg:grid-cols-2 mt-12 lg:mt-0 justify-center items-center '>
         { show ? <MeCoding /> : <div /> }
         <div className='flex-1 w-full flex flex-col items-center lg:items-end mb-12 lg:mb-0 px-4 lg:px-0'>
           <h2 className="flex-1 text-4xl pl-8 py-4 relative z-10 font-bungee">

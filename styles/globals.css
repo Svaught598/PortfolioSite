@@ -79,14 +79,26 @@ body {
     0% {
         transform: perspective(1000px) rotateX(20deg) rotateY(20deg);
     }
+    12% {
+        transform: perspective(1000px) rotateX(0deg) rotateY(28.3deg);
+    }
     25% {
         transform: perspective(1000px) rotateX(-20deg) rotateY(20deg);
+    }
+    37% {
+        transform: perspective(1000px) rotateX(-28.3deg) rotateY(0deg);
     }
     50% {
         transform: perspective(1000px) rotateX(-20deg) rotateY(-20deg);
     }
+    62% {
+        transform: perspective(1000px) rotateX(0deg) rotateY(-28.3deg);
+    }
     75% {
         transform: perspective(1000px) rotateX(20deg) rotateY(-20deg);
+    }
+    87% {
+        transform: perspective(1000px) rotateX(28.3deg) rotateY(0deg);
     }
     100% {
         transform: perspective(1000px) rotateX(20deg) rotateY(20deg);
@@ -95,6 +107,7 @@ body {
 
 .move-in-circle {
     animation-name: circle-tilt;
+    animation-timing-function: linear;
     animation-duration: 20s;
     animation-iteration-count: infinite;
 }

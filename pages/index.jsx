@@ -35,7 +35,6 @@ export default function Home({ projects }) {
         <meta property="twitter:image" content="https://svaught.com/images/og-pic.png" />
       </Head>
 
-
       <Header />
       <Hero />
       <About />
