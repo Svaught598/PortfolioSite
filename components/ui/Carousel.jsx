@@ -52,13 +52,13 @@ export default function Carousel({ items }) {
   return (
     <div>
       <div className='w-11/12 md:w-8/12 mx-auto flex flex-row items-center relative'>
-        <button className='hidden md:block mr-12 text-4xl text-sandy-brown z-50' onClick={slideToPrevItem}>
+        <button className='hidden md:block mr-12 text-4xl text-sandy-brown' onClick={slideToPrevItem}>
           <FontAwesomeIcon icon={faChevronCircleLeft} />
         </button>
         <div className="h-80 md:h-64 flex-1">
           { carouselFragment }
         </div>
-        <button className='hidden md:block ml-12 text-4xl text-sandy-brown z-50' onClick={slideToNextItem}>
+        <button className='hidden md:block ml-12 text-4xl text-sandy-brown' onClick={slideToNextItem}>
           <FontAwesomeIcon icon={faChevronCircleRight} />
         </button>
       </div>
