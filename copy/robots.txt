@@ -1,0 +1,3 @@
+User-agent: *
+# Repeated 'disallow' rules for each image:
+Disallow: /images/*.svg
