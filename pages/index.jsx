@@ -68,6 +68,7 @@ export async function getStaticProps() {
       description: file.matter.data.description,
       githubLink: file.matter.data.githubLink,
       imageLink: file.matter.data.imageLink,
+      deployedLink: file.matter.data?.deployedLink ?? null,
     }
   })
 

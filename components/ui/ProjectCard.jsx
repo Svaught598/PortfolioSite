@@ -2,9 +2,10 @@ import React from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import Tilt from 'react-parallax-tilt';
+import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 
 export default function ProjectCard({ project }) {
-    const { title, description, imageLink, githubLink } = project
+    const { title, description, imageLink, githubLink, deployedLink } = project
 
     return (
         <Tilt
@@ -22,13 +23,20 @@ export default function ProjectCard({ project }) {
                 src={ require(`../../public${ imageLink }`) }
             />
             <div style={{ transform: 'translateZ(40px) scale(0.9)'}}>
-                <h3 className="text-xl md:text-3xl font-bungee text-charcoal px-4 py-2 md:p-4 pb-0 flex flex-row items-center justify-between">
-                    { title }
-                    <a href={ githubLink }>
-                        <FontAwesomeIcon icon={ faGithub } className="" fill="black"/>
+              <h3 className="text-xl md:text-3xl font-bungee text-charcoal px-4 py-2 md:p-4 pb-0 flex flex-row items-center justify-between">
+                { title }
+                <div className="flex flex-row">
+                  { deployedLink && (
+                    <a href={ deployedLink }>
+                      <FontAwesomeIcon icon={ faPlayCircle } className="mr-4" fill="black"/>
                     </a>
-                </h3>
-                <p className="text-sm md:text-xl font-exo text-charcoal p-4">{ description }</p>
+                  )}
+                  <a href={ githubLink }>
+                    <FontAwesomeIcon icon={ faGithub } fill="black"/>
+                  </a>
+                </div>
+              </h3>
+              <p className="text-sm md:text-xl font-exo text-charcoal p-4">{ description }</p>
             </div>
         </Tilt>
     )
