@@ -1,12 +1,10 @@
 import React from 'react';
 import MeCoding from '../ui/MeCoding';
-import useFadeIn from '../../hooks/useFadeIn';
 
 export default function Hero() {
-  const [ref, show] = useFadeIn();
 
   return (
-    <section ref={ref} className="h-936 md:h-auto py-0 md:py-28 bg-white opacity-0 transition-opacity duration-500 ease-in relative">
+    <section className="h-936 md:h-auto py-0 md:py-28 bg-white relative">
       <div className='absolute top-0 left-0 right-0 bottom-0'>
         <div className='w-full h-full relative top-0 left-0'>
           <img src="/images/hero-background-top-1.svg" className='absolute top-0 left-0 right-0 w-screen object-cover overflow-auto' width={900} height={600} alt=''/>
@@ -15,7 +13,7 @@ export default function Hero() {
       </div>
 
       <div className='py-24 md:py-0 md:h-screen w-full md:w-12/12 lg:w-10/12 2xl:w-9/12 mx-auto flex flex-col-reverse lg:grid lg:grid-cols-2 mt-12 lg:mt-0 justify-center items-center '>
-        { show ? <MeCoding /> : <div /> }
+        <MeCoding />
         <div className='flex-1 w-full flex flex-col items-center lg:items-end mb-12 lg:mb-0 px-4 lg:px-0'>
           <h2 className="flex-1 text-4xl pl-8 py-4 relative z-10 font-bungee">
             <span className='absolute w-1 left-0 top-0 h-full bg-charcoal'></span>

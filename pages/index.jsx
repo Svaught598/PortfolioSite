@@ -12,6 +12,7 @@ import Contact from '../components/landing/Contact';
 import Footer from '../components/landing/Footer';
 import Projects from '../components/landing/Projects';
 import Testimonials from '../components/landing/Testimonials';
+import Overlay from '../components/landing/Overlay';
 
 export default function Home({ projects }) {
   useEasterEgg();
@@ -34,7 +35,7 @@ export default function Home({ projects }) {
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:image" content="https://svaught.com/images/og-pic.png" />
       </Head>
-
+      <Overlay />
       <Header />
       <Hero />
       <About />
