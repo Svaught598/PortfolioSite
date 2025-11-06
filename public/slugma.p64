@@ -1,0 +1,3100 @@
+picotron cartridge // www.picotron.net
+version 2
+
+:: entity/
+:: entity/blocks/
+:: entity/blocks/BombBlock.lua
+--[[pod_format="raw",created="2025-05-07 04:45:03",modified="2025-07-05 00:05:00",revision=1534]]
+BombBlock      = Entity:new("BombBlock")
+BombBlock.tile       = { og = 40, replace = 25 }
+BombBlock.chain_time = 5
+
+function BombBlock:new(config)
+	self = setmetatable({}, { __index = BombBlock })
+	self.dead          = false or config.dead
+	self.collideable   = true  or config.collideable
+	self.position		 = config.position or vec(0,0)
+	self.hitbox        = { x=0, y=0, w=16, h=16 }
+	self.timers        = {}
+	self.animation_set = AnimationSet:new {
+		entity = self,
+		default = "idle",
+		animations = {
+			idle = {
+				ticks = 4,
+				frames = { 40, 41, 42 }
+			},
+			detonating = {
+				ticks = 4,
+				frames = { 48, 49, 50, 40, 41, 42 }
+			},
+			impending = {
+				ticks = 4,
+				frames = { 40, 49, 42, 48, 41, 50 }
+			}
+		}	
+	}
+	add(scene_manager.objects, self)
+	return self
+end
+
+function BombBlock:trigger()
+	if not self.triggered then
+		self.animation_set.current_animation = "detonating"
+		add(self.timers, timers:timeout(60 * 3, function() self.animation_set.current_animation = "impending" end))
+		add(self.timers, timers:timeout(60 * 5, function() self:kill() end))
+	end
+	self.triggered = true
+end
+
+function BombBlock:kill()
+	foreach(self.timers, function(timer) timer.cancel() end)
+  	self.dead = true
+  	local x = self.position.x / 16
+  	local y = self.position.y / 16
+  	scene_manager.map:set(x, y, 0)
+  	local px, py =  self:get_center()
+	Explosion:new { position = vec(px, py) }
+   timers:timeout(self.chain_time, function()
+   	self:check_neighbors()
+   end)
+   timers:timeout(self.chain_time*20, function()
+   	local sx, sy = self:get_center()
+   	scene_manager.map:set(x, y, 25)
+   	Explosion:new { position = vec(sx, sy) }
+   	BombBlock:new { position = self.position }
+   end)
+   del(scene_manager.objects, self)
+end
+
+function	 BombBlock:check_neighbors()
+	local x = self.position.x / 16
+	local y = self.position.y / 16
+	for _,pair in pairs({{0,-1},{0,1},{-1,0},{1,0}}) do
+		local i,j = pair[1], pair[2]
+		foreach(scene_manager.objects, function(obj)
+			if obj.name == self.name then
+				if obj.position.x == (x+i)*16 and obj.position.y == (y+j)*16 then
+					obj:kill()
+				end
+			end
+		end)
+	end
+end
+
+function BombBlock:update()
+	self.animation_set:update()
+end
+
+function BombBlock:draw()
+	self.animation_set:draw(self.hitbox.x, self.hitbox.y)
+	self:dbg_draw()
+end
+
+:: entity/blocks/BounceBlock.lua
+--[[pod_format="raw",created="2025-05-10 18:12:51",modified="2025-05-12 19:57:20",revision=381]]
+BounceBlock        = Entity:new("BounceBlock")
+BounceBlock.tile   = { og = 254, replace = 43}
+BounceBlock.hitbox = { x=-2, y=-2, w=19, h=19 }
+
+function BounceBlock:new(config)
+	self = setmetatable({}, { __index = BounceBlock })
+	self.collideable   = true  or config.collideable
+	self.position		 = config.position or vec(0,0)
+	add(scene_manager.objects, self)
+	return self
+end
+
+function BounceBlock:draw()
+	local x,y = self.position.x, self.position.y
+end
+
+:: entity/blocks/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA1LTA3IDA0OjQ0OjQ4Iixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCJdXQ==
+:: entity/enemies/
+:: entity/enemies/Blob.lua
+--[[pod_format="raw",created="2025-05-31 01:51:32",modified="2025-07-05 00:05:00",revision=304]]
+Blob        = Entity:new("Blob")
+Blob.tile   = { og = 251, replace = 0 }
+Blob.hitbox = { x=2, y=9, w=10, h=6 }
+
+function Blob:new(config)
+	self = setmetatable({}, { __index = Blob })
+	self.position    = vec(config.position.x, config.position.y )
+	self.velocity    = vec(0,0)
+	self.gravity     = 0.1
+	self.state       = "idle"
+	self.hflip       = false
+	self.anims       = AnimationSet:new {
+		entity     = self,
+		default    = "idle",
+		animations = {
+			idle = {
+				ticks = 4,
+				frames = { 59, 51, 52, 53, 54 }
+			}
+		}
+	}
+	self:update_state()
+	add(scene_manager.objects, self)
+	return self
+end
+
+function Blob:update_state()
+	if self.intent == nil then
+		self.velocity.x = self.hflip and 2 or -2
+		self.velocity.y = -2
+		self.state  = "jump"
+	end
+	timers:timeout(120 + rnd(40), function() self:update_state() end)
+end
+
+function Blob:update()
+	if self.state == "jump" then
+		local dx = collide_x(self, self.velocity.x)
+		self.position.x += dx
+		if is_zero(dx) then
+			self.velocity.x = self.velocity.x * -1
+			self.hflip = not self.hflip
+		end
+		self.velocity.y += self.gravity
+		local dy = collide_y(self, self.velocity.y)
+		self.position.y += dy
+		if is_zero(dy) then
+			self.velocity.y = 0
+			self.state = "fall"
+		end
+	end
+	if self.state == "fall" then
+		local dx = collide_x(self, self.velocity.x)
+		self.position.x += dx
+		if is_zero(dx) then
+			self.velocity.x = self.velocity.x * -1
+			self.hflip = not self.hflip
+		end
+		self.velocity.y += self.gravity
+		local dy = collide_y(self, self.velocity.y)
+		self.position.y += dy
+		if is_zero(dy) then
+			self.velocity.y = 0
+			self.velocity.x = 0
+			self.state = "idle"
+		end
+	end
+	self.anims:update()
+end
+
+function Blob:draw()
+	spr(251, self.position.x, self.position.y, self.hflip)
+	self.anims:draw(0, 0, self.hflip)
+	self:dbg_draw()
+end
+:: entity/enemies/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA1LTMxIDAxOjUxOjIyIixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCJdXQ==
+:: entity/explosion/
+:: entity/explosion/Explosion.lua
+--[[pod_format="raw",created="2025-04-29 13:56:52",modified="2025-05-11 19:39:34",revision=791]]
+Explosion = Entity:new("Explosion")
+
+function Explosion:new(config)
+	self = setmetatable({}, { __index = Explosion })
+	self.position = config.position or vec(0,0)
+	self.hitbox   = {x=0,y=0,w=16,h=16}
+	self.emitter  = Emitter:new {
+		rate = 20,
+		sys  = explosion_sys,
+		init_pos = function()
+			local ep = self.position
+			return vec(ep.x + rnd(16) - 8, ep.y + rnd(16) - 8)
+		end,
+		init_vel = function()
+			return vec(rnd(2) - 1, rnd(2) - 1)
+		end,
+		init_acc = function()
+			return vec(0, 0)
+		end
+	}
+	timers:timeout(self.emitter:get_lifetime(), function()
+		del(scene_manager.objects, self)
+	end)
+	add(scene_manager.objects, self)
+	return self
+end
+
+function Explosion:update()
+	self.emitter:update()
+	self.emitter:set_rate(0)
+end
+
+:: entity/explosion/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTI5IDEzOjU2OjM3Iixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCJdXQ==
+:: entity/fire-ball/
+:: entity/fire-ball/Fireball.lua
+--[[pod_format="raw",created="2025-04-26 17:37:27",modified="2025-05-30 03:33:28",revision=2094]]
+Fireball = Entity:new("Fireball")
+
+function Fireball:new(config)
+	self = setmetatable({}, { __index = Fireball })
+	self.position     = config.position or vec(0,0)
+	self.velocity     = config.velocity or vec(0,0)
+	self.hitbox       = { x=-4, y=-4, w=8, h=8 }
+	self.col		      = 18
+	self.color_ramp   = { 17, 18 }
+	self.dead         = false
+	self.iframes      = 5
+	self.collideable  = true
+	self.emitter = Emitter:new {
+		rate = 2,
+		sys  = fire_particle_sys,
+		init_pos = function()
+			return vec(
+				self.position.x + rnd(4) - 2, 
+				self.position.y + rnd(2) - 1
+			)
+		end,
+		init_vel = function()
+			return vec(0.1*self.velocity.x, rnd(1) - 0.5)
+		end,
+		init_acc = function()
+			return vec(0, 0)
+		end
+	}
+	add(scene_manager.objects, self)
+	return self
+end
+   
+function Fireball:update_alive()
+  	self.iframes -= 1
+	local dx = collide_x(self, self.velocity.x)
+	self.position.x += dx
+	local dy = collide_y(self, self.velocity.y)
+	self.position.y += dy
+	self.col = self.color_ramp[flr(t()*5)%#self.color_ramp + 1]
+	local bomb_block = self:collide(BombBlock, self.velocity.x, self.velocity.y)
+	if bomb_block then
+		self:kill()
+		bomb_block:kill()
+	end
+	if (self.velocity.x ~= 0 and dx == 0) or (self.velocity.y ~= 0 and dy == 0) then
+		self:kill()
+	end
+end
+
+function Fireball:kill()
+	local x, y = self:get_center()
+	Explosion:new { position = vec(x, y) }
+	self.dead = true
+	self.emitter:set_rate(0)
+	timers:timeout(self.emitter:get_lifetime(), function()
+		del(scene_manager.objects, self)
+	end)
+end
+
+function Fireball:ignore()
+	return self.iframes > 0
+end
+  	
+function Fireball:update()
+	self.emitter:update()
+	if not self.dead then
+		self:update_alive()
+	end
+end
+
+function Fireball:draw()
+	if not self.dead then
+		local x, y = self:get_center()
+		circfill(x, y, 5, self.col)
+		circfill(x, y, 3, 15)
+	end
+end
+
+:: entity/fire-ball/particles.lua
+--[[pod_format="raw",created="2025-05-08 16:16:16",modified="2025-05-09 00:23:19",revision=15]]
+return {
+	rate = 2,
+	lifetime = 10,
+	detach=true,
+	velocity_init = function()
+		return { x = 0, y = rnd(1) - 0.5 }
+	end,
+	position_init = function(fireball)
+		return { x = fireball.position.x + rnd(4) - 2, y = fireball.position.y + rnd(2) - 1 }
+	end,
+	acceleration_init = function()
+		return { x = 0, y = 0 }
+	end,
+	size = { 4, 3 , 1 },
+	color = { 18, 17, 16, 10, 1 }
+}
+:: entity/fire-ball/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTI2IDE3OjM3OjE4Iixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCJdXQ==
+:: entity/fire-coin/
+:: entity/fire-coin/animations.lua
+--[[pod_format="raw",created="2025-04-26 16:17:54",modified="2025-05-14 00:49:01",revision=103]]
+return {
+	spin = {
+		ticks = 4,
+		frames = {
+			{ s=56,sx=0,sy=8,sw=8,sh=8 },
+			{ s=56,sx=8,sy=8,sw=8,sh=8 },
+			{ s=57,sx=0,sy=8,sw=8,sh=8 },
+			{ s=57,sx=8,sy=8,sw=8,sh=8 },
+		   { s=58,sx=0,sy=8,sw=8,sh=8 }
+		}
+	}
+}
+:: entity/fire-coin/FireCoin.lua
+--[[pod_format="raw",created="2025-04-22 05:46:46",modified="2025-05-31 02:35:07",revision=4630]]
+FireCoin        = Entity:new("FireCoin")
+FireCoin.tile   = { og = 255, replace = 0 }
+FireCoin.hitbox = { x=4, y=4, w=8, h=8 }
+
+function FireCoin:new(config)
+	self = setmetatable({}, { __index = FireCoin })
+	self.position      = config.position or vec(0,0)
+	self.dead          = false
+	self.collideable   = true
+	self.animation_set = AnimationSet:new {
+		entity     = self,
+		default    = "spin",
+		animations = include("entity/fire-coin/animations.lua")
+	}
+	self.emitter       = Emitter:new {
+		rate = 1,
+		sys  = fire_particle_sys,
+		init_pos = function()
+			local x, y = self:get_center()
+			return vec(x + rnd(2) - 1, y + rnd(3) - 2)
+		end,
+		init_vel = function(e)
+			return vec(rnd(0.5) - 0.25, rnd(1) * -1)
+		end,
+		init_acc = function(e)
+			return vec(0, rnd(0.01)*-1)
+		end
+	}
+	
+	add(scene_manager.objects, self)
+	return self
+end
+   
+function FireCoin:update_alive()
+	self.position.y += sin(t()/2)/8
+	self.animation_set:update()
+	self.emitter:update()
+	if self:collide(Player, 0, 0) then
+		self.dead = true
+		scene_manager:get_player():toggle_charge(true)
+		self.emitter:set_rate(0)
+		timers:timeout(self.emitter:get_lifetime(), function()
+			del(scene_manager.objects, self)
+		end)
+	end
+end
+
+function FireCoin:update()
+	if not self.dead then
+		self:update_alive()
+	end
+end
+	
+function FireCoin:draw()
+	if not self.dead then
+		self.animation_set:draw(self.hitbox.x, self.hitbox.y)
+	end
+end
+
+:: entity/fire-coin/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTI1IDE3OjEyOjEzIixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCJdXQ==
+:: entity/lava/
+:: entity/lava/Lava.lua
+--[[pod_format="raw",created="2025-04-28 02:55:32",modified="2025-07-05 00:05:00",revision=1297]]
+-- TODO -- when moving to bounding box lava pools for procedural animation
+--
+-- for animating edges, change the initialization in scene_manager
+-- to to check bounding rectangles for flag = 1 (physics flag)
+-- that way we can tell which surfaces are "wavy"
+--
+-- any surface that has at least one air exposed tile should make
+-- that entire side "wavy"
+--
+-- eg
+--
+-- OOO...OOO
+-- OLLLLLLLO
+-- OOOOO.OOO
+--
+-- O = solid (physics tile)
+-- . = air (non-physics tile)
+-- L = lava 
+-- 
+-- so here, the bottom and top would be fully animated as "wavy"
+-- while the sides are static and non-animated.
+Lava      = Entity:new("Lava")
+Lava.tile = { og = 35, replace = 0 }
+
+function Lava:new(config)
+	self = setmetatable({}, { __index = Lava })
+	self.position    = config.position or vec(0,0)
+	self.collideable = true
+	self.hitbox      = {x = 0, y =2, w = 16, h = 14 }
+	self.animation_set = AnimationSet:new {
+		entity = self, 
+		default = "idle",
+		animations = {
+			idle = {
+				ticks = 5,
+				frames = {35, 36, 37, 38}
+			}
+		}
+	}
+	add(scene_manager.objects, self)
+	return self
+end
+
+
+function Lava:update()
+	self.animation_set:update()
+	local p = scene_manager:get_player()
+	if self:collide(Player, 0, 0) and p ~= nil then
+		p:death(p)
+	end
+end
+
+function Lava:draw()
+	self.animation_set:draw(0, 0)
+	self:dbg_draw()
+end
+
+:: entity/lava/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTI4IDAyOjU1OjI2Iixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCJdXQ==
+:: entity/player/
+:: entity/player/states/
+:: entity/player/states/dash.lua
+--[[pod_format="raw",created="2025-05-05 23:29:10",modified="2025-05-26 18:19:37",revision=1362]]
+local DashState = State:new()
+
+function DashState:on_enter(player)
+	player.charged_emitter:set_rate(20)
+	player.velocity.x  = 0
+	player.velocity.y  = 0
+	self.frames        = 0
+	self.duration      = 15
+	self.distance      = 64
+	self.dir_x         = (player.hflip and -1) or 1
+	self.dir_y			 = (player.controls.vertical)
+	if player.controls.vertical ~= 0 and player.controls.horizontal == 0 then
+		self.dir_x = 0
+	end
+end
+
+function DashState:update(player)
+	self.frames += 1
+	local fireball = player:collide(Fireball, 0,0)
+	if fireball and not fireball:ignore() then
+		fireball:kill()
+		player.velocity.x = self.dir_x
+		player.velocity.y = self.dir_y
+		self:set_state("rocket", player)
+	end
+	if self.frames == self.duration then
+		if not is_on_ground(player) then
+			self:set_state("fall", player)
+		else
+			self:set_state("walk", player)
+		end
+	end
+	
+	local dir_x, dir_y = norm(self.dir_x, self.dir_y)
+	local next = easeoutlog(self.frames/self.duration)
+	local prev = easeoutlog((self.frames-1)/self.duration)
+	
+	local vx = self.distance * (next - prev) * dir_x
+	local vy = self.distance * (next - prev) * dir_y
+	
+	local dx = collide_x(player, vx/2)
+	player.position.x += dx
+	local dx = collide_x(player, vx/2)
+	player.position.x += dx
+	
+	local dy = collide_y(player, vy/2)
+	player.position.y += dy
+	local dy = collide_y(player, vy/2)
+	player.position.y += dy
+end
+
+function DashState:on_leave(player, next_state)
+	if next_state ~= "rocket" then
+		player:toggle_charge(false)
+		timers:timeout(player.timeout_dash, function()
+			player:toggle_charge(true)
+		end)
+	end
+end
+
+return DashState
+:: entity/player/states/double_jump.lua
+--[[pod_format="raw",created="2025-04-28 22:29:36",modified="2025-05-26 16:49:43",revision=1038]]
+local DoubleJumpState = State:new()
+
+function DoubleJumpState:on_enter(player)
+	player.velocity.y =  player.jump_state.max_dbl_jump_speed * -1
+	self.button_held = true
+	local vx = player.controls.horizontal * -1
+	player:shoot(vx, 1)
+	player:toggle_charge(false)
+	player.recharge_timer = timers:timeout(player.timeout_shoot, function()
+		player:toggle_charge(true)
+	end)
+end
+
+function DoubleJumpState:update(player)
+	if self.button_held and not player.controls.jump then
+		self.button_held = false
+		player.velocity.y = max(player.jump_state.min_dbl_jump_speed * -1, player.velocity.y)
+	end
+	if player.velocity.y >= 0 then
+		player.velocity.y = 0
+		self:set_state("fall", player)
+	end
+	if is_on_ground(player) and is_zero(player.velocity.x) then
+		player.velocity.x = 0
+		self:set_state("idle", player)
+	end
+	if is_on_ground(player) then
+		self:set_state("walk", player)
+	end
+	
+	player_move_x(player, true)
+	local dy = player_move_y(player)
+	
+	if is_zero(dy) then
+		player.velocity.y = 0
+		self:set_state("fall", player) 
+	end
+end
+
+
+return DoubleJumpState
+:: entity/player/states/fall.lua
+--[[pod_format="raw",created="2025-04-26 01:57:13",modified="2025-05-26 15:44:48",revision=1668]]
+local FallState = State:new()
+
+function FallState:on_enter(player, from)
+	if from == "idle" or from == "walk" then
+		player.coyote_time = 100
+	else
+		player.coyote_time = 0
+	end
+	self.button_held = true
+end
+
+function FallState:update(player)
+	player.coyote_time -= 1
+	if not player.controls.jump then
+		self.button_held = false
+	end
+	if player.coyote_time > 0 and player.controls.jump then
+		player.velocity.y = 0
+		self:set_state("jump", player)
+	end
+	if is_on_ground(player) then
+		self:set_state("walk", player)
+	end
+	if not self.button_held and player.controls.jump and player.charged == true then
+		self:set_state("double_jump", player)
+	end
+	if player.charged and player.controls.shoot then
+		self:set_state("shoot", player)
+	end
+	if player.charged and player.controls.dash then
+		self:set_state("dash", player)
+	end
+	
+	local dx = collide_x(player, player.controls.horizontal*2)
+	player_move_x(player, true)
+	player_move_y(player)
+	
+	if is_next_to_wall(player) then
+		self:set_state("wall_slide", player)
+	end
+end
+
+function FallState:on_leave(player)
+	player.velocity.y = 0
+end
+
+return FallState
+:: entity/player/states/ghost.lua
+--[[pod_format="raw",created="2025-05-26 15:19:24",modified="2025-05-26 22:29:52",revision=665]]
+local GhostState = State:new()
+
+function GhostState:on_enter(player)
+	if player.recharge_timer ~= nil then
+		player.recharge_timer.cancel()
+	end
+	player.ghost_emitter:set_rate(4)
+	player:toggle_charge(false)
+	player.animations:set_anim("ghost")
+	local spwn   = scene_manager:get_respawn()
+	self.target  = spwn.position
+	self.dist    = spwn.position - player.position
+	self.frames   = 0
+	self.duration = 30
+end
+
+function GhostState:update(player)
+	self.frames += 1
+	local next = easeoutquartic(self.frames/self.duration)
+	local prev = easeoutquartic((self.frames-1)/self.duration)
+	player.position += (next - prev) * self.dist
+	local d = player.position - self.target
+	
+	if d.x < 1 and d.y < 1 then
+		self:set_state("idle", player)
+	end
+end
+
+function GhostState:on_leave(player)
+	player.animations:set_anim("idle")
+	player.ghost_emitter:set_rate(0)
+	player:toggle_charge(true)
+end
+
+return GhostState
+:: entity/player/states/idle.lua
+--[[pod_format="raw",created="2025-04-25 16:14:15",modified="2025-05-26 15:44:48",revision=1713]]
+local IdleState = State:new()
+
+function IdleState:on_enter(player)
+	player.jump_state.can_double_jump = true
+	self.button_held = player.controls.jump
+end
+
+function IdleState:update(player)
+	if not player.controls.jump then
+		self.button_held = false
+	end
+	if player.controls.horizontal ~= 0 then
+		self:set_state("walk", player)
+	end
+	if not is_on_ground(player) then
+		assert(player ~= nil, "player nil in idle state")
+		self:set_state("fall", player)
+	end
+	if not self.button_held and player.controls.jump then
+		self:set_state("jump", player)
+	end
+	if player.charged and player.controls.shoot then
+		player:toggle_charge(false)
+		self:set_state("shoot", player)
+	end
+	if player.charged and player.controls.dash then
+		self:set_state("dash", player)
+	end
+end
+
+return IdleState
+:: entity/player/states/jump.lua
+--[[pod_format="raw",created="2025-04-26 03:10:38",modified="2025-05-31 02:09:54",revision=1402]]
+local JumpState = State:new()
+
+function JumpState:on_enter(player)
+	player.velocity.y = player.jump_state.max_jump_speed * -1
+	self.button_held  = true
+	self.min_frames   = 3
+end
+
+function JumpState:update(player)
+	self.min_frames -= 1
+	if not self.button_held then
+		self.button_held = false
+		player.velocity.y = max(player.jump_state.min_jump_speed * -1, player.velocity.y)
+	end
+	if player.velocity.y >= 0 and self.min_frames < 0 then
+		self:set_state("fall", player)
+	end
+	if self.min_frames < 0 and is_on_ground(player) then
+		self:set_state("walk", player)
+	end
+	if not self.button_held and player.controls.jump and player.charged == true then
+		self:set_state("double_jump", player)
+	end
+	if player.charged and player.controls.shoot then
+		self:set_state("shoot", player)
+	end
+	if not player.controls.jump then
+		self.button_held = false
+	end
+	if player.charged and player.controls.dash then
+		self:set_state("dash", player)
+	end
+	
+	player_move_x(player, true)
+	local dy = player_move_y(player)
+	
+	if is_zero(dy) then
+		self:set_state("fall", player) 
+	end
+end
+
+function JumpState:on_leave(player)
+	player.velocity.y = 0
+end
+
+return JumpState
+:: entity/player/states/rocket.lua
+--[[pod_format="raw",created="2025-05-06 14:25:00",modified="2025-05-14 00:48:55",revision=1383]]
+local Rocket = State:new()
+
+function Rocket:on_enter(player)
+	player.rocket_state.velocity = vec(player.velocity.x * 3, player.velocity.y * 3)
+	for i = 1, 4 do
+		local x = player.position.x + player.hitbox.x + player.hitbox.w/2 + rnd(16) - 8
+		local y = player.position.y + player.hitbox.y + player.hitbox.h/2 + rnd(16) - 8
+		local e = Explosion:new { position = vec(x, y) }
+		add(scene_manager.objects, e)
+	end
+end
+
+function Rocket:update(pl)
+	local rs = pl.rocket_state
+	if pl.controls.jump then
+		self:set_state("double_jump", pl)
+	end
+	
+	-- minimal steering
+	rs.velocity.x += pl.controls.horizontal * rs.acc
+	rs.velocity.x = min(abs(rs.velocity.x), rs.max_spd) * sgn(rs.velocity.x)
+	
+	-- block checks
+	local bomb_block = pl:collide(BombBlock,rs.velocity.x,rs.velocity.y)
+	local bounce_block = pl:collide(BounceBlock,rs.velocity.x,rs.velocity.y)
+	if bomb_block then bomb_block:kill() end
+	-- hit wall
+	local dx = collide_x(pl, rs.velocity.x)
+	pl.position.x += dx
+	if bomb_block or bounce_block then
+		rs.velocity.y = -4
+		rs.velocity.x = rs.velocity.x * -1
+	elseif not is_zero(rs.velocity.x) and is_zero(dx) then
+		pl.velocity.x = 0
+		self:set_state("idle", pl)
+	end
+	
+	-- hit ground
+	local on_ground = is_on_ground(pl)
+	if on_ground then
+		if pl:collide(BounceBlock,0,2) then
+			rs.velocity.y = -4
+		else
+			rs.velocity.y = 0
+			rs.velocity.x -= rs.friction * sgn(rs.velocity.x)
+			if pl.controls.horizontal ~= 0 or is_zero(rs.velocity.x) then
+				rs.velocity.x = 0
+				pl.velocity.x = 0
+				self:set_state("walk", pl)
+			end
+		end
+	end
+	
+	
+	rs.velocity.y += rs.gravity
+	rs.velocity.y = min(rs.max_spd, abs(rs.velocity.y)) * sgn(rs.velocity.y)
+	local dy = collide_y(pl, rs.velocity.y)
+	pl.position.y += dy
+	if is_zero(rs.velocity.y) then
+		rs.velocity.y = 0
+	end
+end
+
+function Rocket:draw(player)
+	local x = player.position.x + player.hitbox.x + player.hitbox.w/2
+	local y = player.position.y + player.hitbox.y + player.hitbox.h/2
+	circfill(x, y, self.size, 12)
+end
+
+return Rocket
+
+:: entity/player/states/shoot.lua
+--[[pod_format="raw",created="2025-05-06 13:58:45",modified="2025-05-26 16:49:43",revision=346]]
+local ShootState = State:new()
+
+function ShootState:on_enter(player)
+	player.velocity.x = 0
+	player.velocity.y = 0
+	self.frames       = 0
+	self.duration     = 15
+	self.distance     = 10
+	self.dir_x        = (player.hflip and -1) or 1
+	self.dir_y			= (player.controls.vertical)
+	if player.controls.vertical ~= 0 and player.controls.horizontal == 0 then
+		self.dir_x = 0
+	end
+	player:shoot(self.dir_x, self.dir_y)
+end
+
+function ShootState:update(player)
+	self.frames += 1
+	if self.frames > self.duration then
+		self:set_state("fall", player)
+	end
+	if player.controls.dash then
+		self:set_state("dash", player)
+	end
+	
+	local dir_x, dir_y = norm(self.dir_x, self.dir_y)
+	local next = easeoutquartic(self.frames/self.duration)
+	local prev = easeoutquartic((self.frames-1)/self.duration)
+	
+	local vx = self.distance * (next - prev) * dir_x * -1
+	local vy = self.distance * (next - prev) * dir_y * -1
+	
+	local dx = collide_x(player, vx)
+	player.position.x += dx
+	local dy = collide_y(player, vy)
+	player.position.y += dy
+end
+
+function ShootState:on_leave(player, next_state)
+	if next_state ~= "dash" then
+		player:toggle_charge(false)
+		player.recharge_timer = timers:timeout(player.timeout_shoot, function()
+			player:toggle_charge(true)
+		end)
+	end
+end
+
+
+return ShootState
+:: entity/player/states/states.lua
+--[[pod_format="raw",created="2025-04-26 17:25:36",modified="2025-05-26 19:11:35",revision=542]]
+return function()
+	return Fsm:new {
+		default = "idle",
+			states = {
+			idle        = include("entity/player/states/idle.lua"),
+			walk        = include("entity/player/states/walk.lua"),
+			fall        = include("entity/player/states/fall.lua"),
+			jump        = include("entity/player/states/jump.lua"),
+			dash        = include("entity/player/states/dash.lua"),
+			shoot       = include("entity/player/states/shoot.lua"),
+			rocket      = include("entity/player/states/rocket.lua"),
+			wall_slide  = include("entity/player/states/wall_slide.lua"),
+			double_jump = include("entity/player/states/double_jump.lua"),
+			wall_jump   = include("entity/player/states/wall_jump.lua"),
+			ghost       = include("entity/player/states/ghost.lua")
+		}
+	}
+end
+:: entity/player/states/utils.lua
+--[[pod_format="raw",created="2025-05-04 21:20:24",modified="2025-05-31 02:34:29",revision=698]]
+function player_move_x(player, in_air)
+	-- CONTROLS MOTION ----------------------------------
+	if player.controls.horizontal ~= 0 then
+		local dir = player.controls.horizontal
+		local acc = iif(
+			in_air == true,
+			player.motion.air_acceleration,
+			player.motion.acceleration
+		)
+		local mx_spd = iif(
+			in_air == true or player.charged,
+			player.motion.air_max_speed,
+			player.motion.max_speed
+		)
+		player.velocity.x = mid(
+			mx_spd * -1,
+			player.velocity.x + (acc * dir),
+			mx_spd
+		)
+	end
+	
+	-- FRICTION ----------------------------------
+	if not is_zero(player.velocity.x) then
+		local sign = player.velocity.x > 0 and -1 or 1
+		local frcn = iif(
+			in_air == true,
+			player.motion.air_friction,
+			player.motion.friction
+		)
+		local mx_spd = iif(
+			in_air == true or player.charged,
+			player.motion.air_max_speed,
+			player.motion.max_speed
+		)
+		player.velocity.x = mid(
+			mx_spd * -1,
+			player.velocity.x + sign * frcn,
+			mx_spd
+		)
+	end
+	
+	-- PHYSICS -----------------------------------
+	local dx = collide_x(player, player.velocity.x)
+	player.position.x += dx
+	player.velocity.x = min(abs(dx), abs(player.velocity.x)) * sgn(dx)
+
+	return player.velocity.x
+end
+
+function player_move_y(player, g)
+	local grv = iif(
+		g ~= nil,
+		g,
+		iif(
+			player.controls.jump,
+			player.jump_state.min_gravity,
+			player.jump_state.max_gravity
+		)
+	)
+	local max_spd = iif(
+		player.controls.jump,
+		player.jump_state.min_fall_speed,
+		player.jump_state.max_fall_speed
+	)
+	
+	player.velocity.y += grv
+	if player.velocity.y > 0 then
+		player.velocity.y = min(player.velocity.y, max_spd)
+	end
+	
+	local spd = abs(player.velocity.y)
+	local sign = sgn(player.velocity.y)
+
+	local dy = collide_y(player, player.velocity.y)
+	player.position.y += dy
+	--player.velocity.y = min(abs(dy), abs(player.position.y)) * sign
+	return player.velocity.y
+end
+:: entity/player/states/walk.lua
+--[[pod_format="raw",created="2025-04-25 20:56:53",modified="2025-05-14 00:48:55",revision=1312]]
+local WalkState = State:new()
+
+function WalkState:on_enter(player)
+	self.button_held = player.controls.jump
+end
+
+function WalkState:update(player)
+	if not player.controls.jump then
+		self.button_held = false
+	end
+	if not is_on_ground(player) then
+		self:set_state("fall", player)
+	end
+	if is_on_ground(player) and is_zero(player.velocity.x) then
+		player.velocity.x = 0
+		self:set_state("idle", player)
+	end
+	if not self.button_held and player.controls.jump then
+		self:set_state("jump", player)
+	end
+	if player.charged and player.controls.shoot then
+		self:set_state("shoot", player)
+	end
+	if player.charged and player.controls.dash then
+		self:set_state("dash", player)
+	end
+	
+	player_move_x(player, false)
+end
+
+return WalkState
+:: entity/player/states/wall_jump.lua
+--[[pod_format="raw",created="2025-05-26 14:28:00",modified="2025-05-26 15:01:57",revision=93]]
+local WallJumpState = State:new()
+
+function WallJumpState:on_enter(player)
+	local vx, vy = norm(player.wall_state.dir, -1)	
+	player.velocity.y = vy*player.wall_state.speed
+	player.velocity.x = vx*player.wall_state.speed
+	self.button_held  = true
+	self.min_frames   = 10
+end
+
+function WallJumpState:update(player)
+	self.min_frames -= 1
+	if not self.button_held then
+		self.button_held = false
+		player.velocity.y = max(player.jump_state.min_jump_speed * -1, player.velocity.y)
+	end
+	if player.velocity.y >= 0 and self.min_frames < 0 then
+		self:set_state("fall", player)
+	end
+	if self.min_frames < 0 and is_on_ground(player) then
+		self:set_state("walk", player)
+	end
+	if not self.button_held and player.controls.jump and player.charged == true then
+		self:set_state("double_jump", player)
+	end
+	if player.charged and player.controls.shoot then
+		self:set_state("shoot", player)
+	end
+	if not player.controls.jump then
+		self.button_held = false
+	end
+	if player.charged and player.controls.dash then
+		self:set_state("dash", player)
+	end
+	
+	player_move_x(player, true)
+	local dy = player_move_y(player)
+	
+	if is_zero(dy) then
+		self:set_state("fall", player) 
+	end
+end
+
+return WallJumpState
+:: entity/player/states/wall_slide.lua
+--[[pod_format="raw",created="2025-05-14 01:56:54",modified="2025-05-26 15:01:57",revision=254]]
+local WallSlideState = State:new()
+
+function WallSlideState:on_enter(player)
+	self.button_held = true
+end
+
+function WallSlideState:update(player)
+	local h = player.controls.horizontal
+	local dx = h ~= 0 and h or player.hflip and -1 or 1
+	player_move_x(player)
+	
+	local dir = is_next_to_wall(player)
+	player.wall_state.dir = dir
+	if dir == nil then
+		self:set_state("fall", player)
+	end
+	if not self.button_held and player.controls.jump then
+		self:set_state("wall_jump", player)
+	end
+	if not player.controls.jump then
+		self.button_held = false
+	end
+
+	player_move_y(player, player.wall_state.gravity)
+end
+
+return WallSlideState
+:: entity/player/states/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTI2IDE3OjI1OjA4Iixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCJdXQ==
+:: entity/player/animations.lua
+--[[pod_format="raw",created="2025-05-26 16:15:58",modified="2025-05-26 16:17:36",revision=22]]
+return function(player)
+	return AnimationSet:new {
+		entity = player,
+		default = "charged",
+		animations = {
+			idle = {
+				ticks = 10,
+				frames = {1, 2, 3, 4}
+			},
+			charged = {
+				ticks = 10,
+				frames = {9, 10, 11, 12}
+			},
+			wall  = { ticks = 10, frames = { 13 } },
+			ghost = { ticks = 10, frames = { 5, 6, } }
+		}
+	}
+end
+:: entity/player/ghost_particles.lua
+--[[pod_format="raw",created="2025-05-26 16:04:33",modified="2025-05-26 16:12:16",revision=31]]
+return function(player)
+	return Emitter:new {
+		rate = 0,
+		sys = ghost_sys,
+		init_pos = function()
+			local p = player.position
+			local h = player.hitbox
+			return vec(
+				p.x + h.x + h.w/2 + rnd(2) - 1,
+				p.y + h.y + h.h/2 + rnd(3) - 2 
+			)
+		end,
+		init_vel = function()
+			return vec(
+				rnd(1) - 0.5,
+				rnd(1) - 0.5
+			)
+		end,
+		init_acc = function()
+			return vec(0,0)
+		end
+	}
+end
+:: entity/player/particles.lua
+--[[pod_format="raw",created="2025-04-28 20:37:03",modified="2025-05-26 16:12:16",revision=239]]
+return function(player)
+	return Emitter:new {
+		rate = 2,
+		sys = fire_particle_sys,
+		init_pos = function()
+			local p = player.position
+			local h = player.hitbox
+			return vec(
+				p.x + h.x + h.w/2 + rnd(2) - 1,
+				p.y + h.y + h.h/2 + rnd(3) - 2 
+			)
+		end,
+		init_vel = function()
+			local dir = (player.hflip and 1) or (player.hflip or -1)
+			return vec(
+				rnd(0.5) * dir,
+				(rnd(0.5) * -1)
+			)
+		end,
+		init_acc = function()
+			return vec(0, rnd(0.01)*-1)
+		end
+	}
+end
+:: entity/player/Player.lua
+--[[pod_format="raw",created="2025-04-25 15:46:00",modified="2025-05-31 01:53:16",revision=6363]]
+include("entity/player/states/utils.lua")
+
+Player = Entity:new("Player")
+
+local ChargedEmitter    = include("entity/player/particles.lua")
+local GhostEmitter      = include("entity/player/ghost_particles.lua")
+local Animations        = include("entity/player/animations.lua")
+local PlayerFsm			= include("entity/player/states/states.lua")
+
+function Player:new(config)
+	self = setmetatable({}, { __index = Player })
+	self.charged     = true
+	self.collideable = true
+	self.hflip       = false
+	self.position    = vec(config.position.x, config.position.y )--config.position or vec(0,0)
+	self.hitbox      = { x=4, y=4, w=9, h=8 }
+	self.velocity    = { x=0, y=0 }
+	self.knockback   = { x=0, y=0 }
+	self.shoot_spd   = 2
+	self.controls    = { horizontal, vertical, jump, shoot, dash }
+	self.motion      = {
+		max_speed          = 2.0,
+		acceleration       = 0.4,
+		friction           = 0.2,
+		air_max_speed      = 2.2,
+		air_acceleration   = 0.30,
+		air_friction       = 0.1,
+	}
+	self.rocket_state = {
+		max_spd            = 6,
+		velocity           = vec(0,0),
+		acc                = 0.1,
+		bounce             = 8,
+		gravity            = 0.2,
+		friction           = 0.3,
+		size               = 6,
+		collision_cooldown = 3
+	}
+	self.jump_state  = {
+		min_jump_speed     = 1.0,
+		max_jump_speed     = 4.0,
+		min_dbl_jump_speed = 1.0,
+		max_dbl_jump_speed = 3.0,
+		min_gravity        = 0.15,
+		max_gravity        = 0.2,
+		min_fall_speed     = 3.0,
+		max_fall_speed     = 4.0,
+		can_double_jump    = false
+	}
+	self.wall_state = {
+		dir       = 1,
+		speed     = 4,
+		gravity   = 0.05
+	}
+	self.recharge_timer  = nil
+	self.timeout_dash    = 45
+	self.timeout_shoot   = 45
+	self.fsm             = PlayerFsm()
+	self.animations      = Animations(self)
+	self.charged_emitter = ChargedEmitter(self)
+	self.ghost_emitter   = GhostEmitter(self)
+	add(scene_manager.objects, self)
+	scene_manager:set_player(self)
+	return self
+end
+
+function Player:toggle_charge(bool)
+	self.charged = bool
+   self.charged_emitter:set_rate(bool and 2 or 0)
+   if bool then
+		self.animations:set_anim("charged")
+   	local x, y = self:get_center()
+   	e = Explosion:new { position = vec(x, y) }
+	else
+		self.animations:set_anim("idle")
+  	end
+end
+
+function Player:toggle_rocket(bool)
+	self.rocket_mode = bool
+end
+
+function Player:shoot(x,y)
+	local px, py = self:get_center()
+	local fireball = Fireball:new { position = vec(px,py) }
+	local vx, vy = norm(x or 1, y)
+	fireball.velocity.x = vx * self.shoot_spd
+	fireball.velocity.y = vy * self.shoot_spd
+end
+
+function Player:death()
+   local x, y = self:get_center()
+	Explosion:new { position = vec(x,y) }
+	self.fsm:set_state("ghost", self)
+end
+
+function Player:update_controls()
+	if keyp("space") then
+		self:toggle_charge(true)
+	end
+	self.controls.horizontal = 
+		((btn(BUTTON_LEFT ) and -1) or 0) +
+		((btn(BUTTON_RIGHT) and  1 )or 0)
+	self.controls.vertical = 
+		((btn(BUTTON_UP   ) and  1) or 0) +
+		((btn(BUTTON_DOWN ) and -1) or 0)
+	self.controls.jump  = btn(BUTTON_A) and true
+	self.controls.shoot = btn(BUTTON_X) and true
+	self.controls.dash  = btn(BUTTON_B) and true
+	self.hflip = 
+		(self.controls.horizontal == 0 and self.hflip)
+		or self.controls.horizontal < 0
+end
+	
+function Player:update()
+	for v in all({{-1,0},{1,0},{0,-1},{0,1}}) do
+		local bb = self:collide(BombBlock, v[1]*2,v[2]*2)
+		if bb then bb:trigger() end
+	end
+	self:update_controls()
+	self.charged_emitter:update()
+	self.ghost_emitter:update()
+	self.fsm:update(self)
+	self.animations:update()
+end
+
+function Player:draw()
+	self.fsm:draw(self, 0, 16)
+	self.animations:draw(0,0,self.hflip)
+end
+
+:: entity/player/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTI1IDE1OjQyOjE5Iixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCJdXQ==
+:: entity/spawn/
+:: entity/spawn/Respawn.lua
+--[[pod_format="raw",created="2025-05-10 16:46:56",modified="2025-05-26 17:49:44",revision=365]]
+Respawn        = Entity:new("Respawn")
+Respawn.tile   = { og = 252, replace = 0 }
+Respawn.hitbox = { x=0, y=0, w=16, h=16 }
+
+function Respawn:new(config)
+	self = setmetatable({}, { __index = Respawn })
+	self.position = config.position
+	self.active   = config.active or false
+	self.position = config.position
+	self.animation_set = AnimationSet:new {
+		entity     = self,
+		default    = "spin",
+		animations = include("entity/fire-coin/animations.lua")
+	}
+	self.emitter  = Emitter:new {
+		rate = 5,
+		sys  = explosion_sys,
+		init_pos = function()
+			local x, y = self:get_center()
+			return vec(x + rnd(2) - 1, y + rnd(3) - 2)
+		end,
+		init_vel = function(e)
+			return vec(rnd(0.5) - 0.25, rnd(1) * -1)
+		end,
+		init_acc = function(e)
+			return vec(0, rnd(0.01)*-1)
+		end
+	}
+	add(scene_manager.objects, self)
+	self.foo = false
+	return self
+end
+
+
+function Respawn:activate()
+	scene_manager:set_respawn(self)
+	self.active = true
+end
+
+
+function Respawn:make_player()
+	local e = Player:new { position = self.position }
+	scene_manager:set_player(e)
+end
+
+
+function Respawn:update()
+	self.animation_set:update()
+	if scene_manager:get_respawn() == self then
+		self.emitter:update()
+	end
+	if self:collide(Player, 0, 0) then
+		self:activate()
+	end
+	local fb = self:collide(Fireball, 0, 0)
+	if fb then
+		self:activate()
+		fb:kill()
+	end
+end
+
+function Respawn:draw()
+	self.animation_set:draw(4,4,self)
+end
+
+:: entity/spawn/Spawn.lua
+--[[pod_format="raw",created="2025-04-28 23:23:20",modified="2025-05-30 03:33:28",revision=1285]]
+Spawn        = Entity:new("Spawn")
+Spawn.tile   = { og = 253, replace = 253 }
+Spawn.hitbox = { x=0, y=0, w=16, h=16 }
+
+function Spawn:new(config)
+	self = setmetatable({}, { __index = Spawn })
+	self.active   = config.active or false
+	self.position = config.position
+	if scene_manager:get_player() == nil then
+		self:make_player()
+	end
+	add(scene_manager.objects, self)
+	scene_manager:set_respawn(self)
+	return self
+end
+
+
+function Spawn:make_player()
+	local e = Player:new { position = self.position }
+end
+
+:: entity/spawn/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTI4IDIzOjIzOjE0Iixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCJdXQ==
+:: entity/enemies.lua
+--[[pod_format="raw",created="2025-05-31 01:51:08",modified="2025-05-31 01:51:09",revision=1]]
+
+:: entity/Entity.lua
+--[[pod_format="raw",created="2025-04-22 01:16:01",modified="2025-05-31 02:34:29",revision=3761]]
+Entity = {}
+entities = {}
+
+function Entity:new(name)
+	assert(name ~= nil, "Entity must be named")
+	self = setmetatable({}, { __index = Entity })
+	self.name = name
+	add(entities, self)
+	return self
+end
+
+function Entity:dbg_draw()
+	if DEBUG.HITBOX == true and self.hitbox then
+		rect(
+			self.position.x + self.hitbox.x,
+			self.position.y + self.hitbox.y,
+			self.position.x + self.hitbox.x + self.hitbox.w,
+			self.position.y + self.hitbox.y + self.hitbox.h,
+			6
+		)	
+	end
+end
+
+function Entity:get_name()
+	return self.name
+end
+
+function Entity:get_center()
+	assert(self.position ~= nil)
+	assert(self.hitbox ~= nil)
+	local x = self.position.x + self.hitbox.x + self.hitbox.w/2
+	local y = self.position.y + self.hitbox.y + self.hitbox.h/2
+	return x, y
+end
+
+function Entity:collide(entity, ox, oy)
+	local other
+	for i = 1, count(scene_manager.objects) do
+		other=scene_manager.objects[i]
+		if other ~= nil and other.name == entity.name and other ~= self and other.collideable then
+			if other.position.x+other.hitbox.x+other.hitbox.w > self.position.x+self.hitbox.x+ox and 
+				other.position.y+other.hitbox.y+other.hitbox.h > self.position.y+self.hitbox.y+oy and
+				other.position.x+other.hitbox.x < self.position.x+self.hitbox.x+self.hitbox.w+ox and 
+				other.position.y+other.hitbox.y < self.position.y+self.hitbox.y+self.hitbox.h+oy then
+				return other
+			end
+		end
+	end
+	return nil
+end
+
+:: entity/Exit.lua
+--[[pod_format="raw",created="2025-05-26 18:09:08",modified="2025-07-05 00:05:00",revision=928]]
+Exit = Entity:new("Exit")
+
+function Exit:new(config)
+	self = setmetatable({}, { __index = Exit })
+	self.scene    = config.scene
+	self.position = config.position
+	self.hitbox   = config.hitbox
+	add(scene_manager.objects, self)
+	return self
+end
+
+function Exit:update()
+	if self:collide(Player, 0, 0) then
+		transitions:begin{
+			callback = function() scene_manager:load_scene(self.scene)end
+		}
+		del(scene_manager.objects, self)
+	end
+end
+
+function Exit:draw()
+	rectfill(
+		self.position.x + self.hitbox.x, 
+		self.position.y + self.hitbox.y,
+		self.position.x + self.hitbox.x + self.hitbox.w, 
+		self.position.y + self.hitbox.y + self.hitbox.h,
+		9
+	)
+end
+:: entity/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTIyIDAxOjExOjIwIixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCIsc3RvcmVkPSIyMDI1LTA0LTIyIDAxOjExOjIwIl1d
+:: gfx/
+:: gfx/0.gfx
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTIyIDAxOjA0OjMzIixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCIscmV2aXNpb249MTEzODddXWx6NAAJDAAAp0UAAPMVe1swXT17Ym1wPXB4
+dQBDIBAQBP8R8CxmbGFncz0wLHBhbl94CADaeT0wLHpvb209MTR9LDMAkPA2Dx0fHh8fkAcAMD8f
+cAcAvQ8fDxYfHw8WDx9gDwDwBi8ePx8PHmAPHT8eHx8fHnAPHV8ekA4AL-A1ewAeHyZ7ACrfYB8d
+bx5wHx1PHpBPHX4AMx9fdgACAw0AD3oANx82egAbD28BNfcFJQYHKJAGB0hwBgdoYAYHGAkYCQgI
+AP8HaGAGF0gHcAYXKAeABldgFleAFifwGGYAHh81ZgAMMHAGB2YAMgdIgGoAb0eABjfwCGcAHh-w
+MgBQ8Qc2CxwdkAscPXALHA0PHB0ODWALHA0OCADvLD0MYAs8HRxwC1yQCzyNASAfJlwAD49gG2xw
+G0yQS14AKyZdYGIATywOHQ5cAC4fNlwABw8UASwf8DIAgfE3EC8VHzGPFQAOPxQPMY8UDj0PEw8x
+DxNtDA49DB8xHD0MCw4tDEs8Gw4dDBstaw4NDBstDAtNSz0MCx0sGw0MCy0MGxw7DgkAIEssHwDw
+Dw0MK0wLDh0MCw0MCwwbHCsOHQw7HFsOLQwbPAscGwgAMCwbLFUAE6urAB8xqwAV8DKPFR8xPxUA
+nxQPMT8UDxVvFB8TPzEPEx8UDxM-FB8TLzEfFB8xHxMPMT8TLzFPFI8x3xQPMc8UDxMvMW8UTxMf
+MQoAcU8TXzEvE38oAAAUABEvBABRDzEvEy8EANEfE18xDxPPMS8TTzEvCAA--zECqgAhQy8VEI_q
+AFIADxNvFFgBAA8AAggAMx8THxAAUB8xPxNPnQAA1QBCMS8UH9UAUBUPMU8ULAACEgARDxIAEC8a
+AAFAACJ-MUIAMi8UDx4AAbMABxAAAEAAIRMvDAAEQAATLzQABDIAAmgAJV8xSQEUFUEBA1oAIxUP
+IQEEEAATrwgADxIBHWH-MR4fE59-AAIIAAAEAGBPMR8TbzG6ASQ-E4UAE38kABMvIAARHwQAAJ0A
+Eb97ABRPEAAwMR8UygECxQARPzIAAg4ABEEBABQAAh4AER8WAAJAAA_5AB-BIh8TzzE-Ew8xHxOP
+CABRLxPvMS9HAhFPLwIzLxQPHgAAewAA2wARD54BYm8xDxQPE1IBAtEAALUAABIAMw8TXwoAEx88
+ABRPRgADEAARDy4AJC8UEQEPtwAdL-DwMgCBSQAPFQ-nAFdPMQ8VHxIAEC8EAiUVDxsBBD0BEQ8W
+ABAfTgMlEz8QAAEhAwEQABE-CgARD1kBBCgAEg9SAgFOAB0PEgAAXQEAHQMVP4IAMy8UfwwAER9E
+AASFATEPFS9EBAIFAwQQABEPJAAAOgQKFAACtAAVPxIAFx94AAbzAS9vMYgCHw9uAR4STykBJRMf
+EgRHAD8xLxMAER-hAwXoAAMqAxMPFgARP2cEKB8xEAABkQQwFA8VaQQRDxAAE29lAAIqABVPDgAE
+cwAANgATL9UEABAAEH-VAgltBBMfcAEEFAARD3EEEy9pBCIfMRgCACQAEw8UABM-sAAKEgADVgAF
+SQUE0AAfH68EIACaABF-SgAEpAAIXgAGWQECYAAAMgYTHxAAAukDFQ_iABJvSgAjFJ-RAxOPPAAy
+LxRf9wMjE19RBAB3BROPfwV-zzEfE-8xIrcAHQBzAhG-NgQCZwICtwETH_8CAkkBFS8UABEPfQAD
+xQACjQABQAACMAATHxQABboEAREBET-yBABhBwK7BRNPywUTnyQAEZ_5AB8efQSBDzIAHwLEAxOv
+zAMRH4YCAUADAxAAAhUGEx-aAwIbAQIMAAIKBAEkAgFBAQR0BCIPFIQIA8AEIRMPcwEABgImDzEQ
+AAJtAQOyBCUULy4ABMUBAYYDIxUfEgATb5AAEk_3ByMVP0IAAkAAIw8VCAABgwgyAA8V6AkD9wkP
+hgQfEAv2BgIEAABjAxGvUgICVgIXH1EJES9lCRU-dQkAnQkCiQkRLx0EZK8UXzGfFKsJKi8xwwkE
+2wkRv0EJEp-4CQ_sAB0EqwgTD5MAFR9SBAJkAwQQAAj-CA8hCQMPSQkAC2sJEz84AAQSAAFwABIU
+CgUST7ABA5gIGw-lCQj9CQwZCgo3CgVOCl_OHzEuEA4BHf8PLxFAfi8QTv0UXw9t-BcfDqx7TFsM
+y1xb-AZbTPslTgAd-xFvEUA_bxBO-QQ-D71cbfwUTw6ci0w7LKt8W-wCm0z7IVAAHf8irxFArxBP
+Ef8QBD8PjxCPD18Q-w8VTw5-D68OLw9fDi8Pjw6fDz8O-w8Drw4fD-8OIGEAHf8RMK8RAD6vEA79
+CD8PjYwd-BlPDhwLTPsELIv8ChtM_ylNBE--bxA-FgBuIA4-FQBtDgAOPQ8UABxdHi0MMBw9Hi0M
+AA8QDCAcHR4dDBALLCAMDR4dDAAcHxMMGzAODQwQDDocAAwNHg0MABw6DBAMDQ4wGwwaHAAMHR4N
+DCAsCxAMHR4dHCAMCwAMLR49HDAMLR5dHAAMPQ4ADm0APQ4gbgA_EK4AOkEgDxAQrQBUIAwPEwyv
+AFAbDFAODcoAMUsMEK4AtBAMSwoADA0OUAwbrQBBDAsMIK4APxAKIK0AVBFQqgBiAA8QPAsQqgBS
+DD8TDEBYAQWqAAJYAUJADDoMqgBREAs8CwCqAB9QqAA3kgDfHQAOHx4OHQIAUR4NDg0eAgDyAw4N
+Li0OPx8OLS4NDg0MDTwNDBsA8Ad9Hg0uDRwNPA0cDS4NDhwNDB8iDA0cGwAADQARGwwABiEAAC8A
+Fx5BAEIuLQ48UwAiHg0aADQeHQ4CAD8A3gD0Ah8PMgCzMRA-Ei8CExEvAhgQLwJQAA0MID2IAxYN
+iAMyDwwdiAMVO4gDETswAiYwHdsCJCwNiAMfDYgDOg_sAAglIA2HAxwPhwMXDYYDHw2GAwYvDSCr
+AFQDhgNEDTwNEIUDEw_FAxU7qQATO4UDFDuFA08NPA0AhQM9kPCEXxMPMXBfFAYIYVAfFC8WLwsA
+okAPFB8WDxcfFh8PAAgaACETX4YJb1B-Ew8xMJQTHhh0cQAef14AD3gAUg9xABovQJ92ACcCXwEz
+DxQvYAAfUG8ABx9-5wAyH-AyAB3wNlAPHtALDmAOQAwLCg8dQAwLDiAMGwoQDBAMGw0gGwogCxwb
+CgAMAAwLCkAKGwogGwrwDj8UMDkgCQ8RDxIPEQ8QCRAJHwsAMhwJABQAEBANADAPEBkNAKEfEA8c
+DxIZCC8QEwD-Ggg3DxwZBicPEQcZBjcGGRYHFgcZFhcGBQkACQYVBwkQCQYlCSA5MDkQ_AAegAUP
+HmAOUAwLyAAgDgC_ACEPHQcAIA0AwgAQEAUA8AEgChsKMAobCvAWHxRQGUAJwAAgCTAHADQQCSC8
+ADQcCSASAEIIDxEIEAAhEQgPAEAcCA8RDwAQHA8A-wwHDxEIBwkgCQYICTAJCA8SCTAJBwgJQBlQ
+GSC_AB5Qcx8UwA52ADMOoA5CATIRDpALADARDxALABARnAACCwARHBYAvxwOoA4NDxAOwB6gcAAe
+YpRPFB8TcFALRFAPFE_PAggLAA_IAisaVG8DMx8WP1cAjxQPFh8XDxYvDwACBykACw8DD4UDKRA1
+ig0wYE8U9gwjUA9yAzAfMTB9AFYvFw8WHw8AIg8XBAAfHyIAAgSuA0kfMTB-BwAFpgAQj2MAP28T
+H7oDUQ8yACD-IiQ_AD5QDj8PDj0OMA6tDiAOfRkNDjAObRkOUA49WVAOLVlgDi0OGZAODQ4AGaAO
+8CdiAC--CK0OMA6NDlAObQ5wDk0OkA4tDrAODQ7QXAAhH-AyAP--------------------------
+---------------------zIJzipADxQfFwQAFx-pKRUUeikPbykzgBQaC0pgCis8HilBKzocC2Ao
+EzsIAEMLLAsMCgAvDB0LAAkyKww7EwAQbEgAb3sKYHrwFIsAHvAUB2FgkTAxVREwIXURECElMRUR
+ECE1YRAxVTEAUVUhACEVMSUYAP4DISUREDFlIRBBVSEQwTChYGFAagAPuS-LUjY-FKAOsyo2DoAO
+pir-Eg5wDg0-EA8cDnAODD8QDA5wDhwbDA8RDoAODCoOoD7wNikBClA9MTR9fQ==
+:: gfx/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTIyIDAxOjA0OjMyIixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCIsc3RvcmVkPSIyMDI1LTA0LTIyIDAxOjA0OjMyIl1d
+:: lib/
+:: lib/particles/
+:: lib/particles/Emitter.lua
+--[[pod_format="raw",created="2025-05-08 02:38:03",modified="2025-05-27 04:53:26",revision=504]]
+local Emitter = {}
+
+function Emitter:new(config)
+	self = setmetatable({}, { __index = Emitter })
+	self.rate     = config.rate
+	self.sys      = config.sys
+	self.init_pos = config.init_pos
+	self.init_vel = config.init_vel
+	self.init_acc = config.init_acc
+	return self
+end
+
+function Emitter:update()
+	for i = 1, self.rate do
+		self.sys:add_particle(
+			self.init_pos(),
+			self.init_vel(),
+			self.init_acc()
+		)
+	end
+end
+
+function Emitter:get_lifetime()
+	return self.sys.lifetime
+end
+
+function Emitter:set_rate(rate)
+	self.rate = rate
+end
+
+return Emitter
+:: lib/particles/ParticleSystem.lua
+--[[pod_format="raw",created="2025-05-08 02:35:13",modified="2025-05-29 02:56:17",revision=2404]]
+local CircfillParticleSystem = {}
+
+function make_ramp(tbl)
+	return vec(table.unpack(reverse(tbl)))
+end
+
+function CircfillParticleSystem:new(config)
+	self = setmetatable({}, { __index = CircfillParticleSystem })
+	self.lifetime = config.lifetime
+	self.crmp     = make_ramp(config.color_ramp)
+	self.srmp     = make_ramp(config.size_ramp)
+	self.maxp     = config.max_particles
+	self.next_idx = 0
+	self.pos      = userdata("f64", 2, config.max_particles)
+	self.vel      = userdata("f64", 2, config.max_particles)
+	self.acc      = userdata("f64", 2, config.max_particles)
+	self.size     = userdata("f64", 1, config.max_particles)
+	self.col      = userdata("f64", 1, config.max_particles)
+	self.life     = userdata("i32", 1, config.max_particles)
+	self.drawargs = userdata("f64", 4, config.max_particles)
+	return self
+end
+
+function CircfillParticleSystem:add_particle(p,v,a)
+	self.pos:set(0,self.next_idx,p:get(0,2))
+	self.vel:set(0,self.next_idx,v:get(0,2))
+	self.acc:set(0,self.next_idx,a:get(0,2))
+	self.life:set(0,self.next_idx,self.lifetime)
+	self.next_idx += 1
+	if (self.next_idx >= self.maxp) then
+		self.next_idx = 0
+	end
+end
+
+function CircfillParticleSystem:update()
+	self.life:sub(2, true):max(0, true)
+	local msk = (1/(self.life:add(1, true))):convert("f64")
+	self.pos:max(msk*10000,true,0,0,1,1,2,self.maxp)
+	local n_col = self.crmp:width()
+	local n_size = self.srmp:width()
+	self.crmp
+		:convert("f64")
+		:take(self.life:mul(n_col):div(self.lifetime), self.col)
+	self.srmp
+		:convert("f64")
+		:take(self.life:mul(n_size):div(self.lifetime), self.size)
+	self.vel:add(self.acc, true)
+	self.pos:add(self.vel, true)
+	self.pos:blit(self.drawargs, 0,0, 0,0, 2,self.maxp)
+	self.size:convert("f64"):blit(self.drawargs,0,0,2,0,1,self.maxp)
+	self.col:convert("f64"):blit(self.drawargs,0,0,3,0,1,self.maxp)
+	self.life:convert("f64"):blit(self.drawargs,0,0,4,0,1,self.maxp)
+	self.drawargs:sort(4, false)
+end
+
+function CircfillParticleSystem:draw()
+	circfill(self.drawargs)
+end
+
+return CircfillParticleSystem
+:: lib/particles/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA1LTA4IDAyOjM0OjU5Iixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCJdXQ==
+:: lib/states/
+:: lib/states/Fsm.lua
+--[[pod_format="raw",created="2025-04-25 16:31:18",modified="2025-05-27 04:53:26",revision=2481]]
+local Fsm = {}
+
+function Fsm:new(config)
+	self = setmetatable({}, { __index = Fsm })
+	assert(config.default ~= nil)
+	assert(config.states ~= nil)
+	for _,state in pairs(config.states) do
+		state.parent = self
+	end
+	self.current  = config.default
+	self.states   = config.states
+	return self
+end
+
+function Fsm:get_state(state)
+	assert(self.states[state] ~= nil, "Get State invalid")
+	return self.states[state]
+end
+
+function Fsm:set_state(new_state, msg)
+	local old_state = self.current
+	assert(self.states[new_state] ~= nil, "New State invalid")
+	local s1 = self:get_state(old_state)
+	local s2 = self:get_state(new_state)
+	
+	if s1.on_leave~= nil then
+		s1:on_leave(msg, new_state)
+	end
+	if s2.on_enter ~= nil then
+		s2:on_enter(msg, old_state)
+	end
+	self.current = new_state
+end
+
+function Fsm:update(entity)
+	local s = self:get_state(self.current)
+	s:update(entity)
+end
+
+function Fsm:draw(entity, ox, oy)
+	if DEBUG_STATES and entity ~= nil then
+		local p = entity.position
+		print(self.current, p.x + ox, p.y + oy, 7)
+	end
+	local s = self:get_state(self.current)
+	if s.draw != nil then
+		s:draw(entity)
+	end
+end
+
+return Fsm
+:: lib/states/State.lua
+--[[pod_format="raw",created="2025-04-25 15:38:12",modified="2025-05-26 20:19:21",revision=750]]
+local State = {}
+
+function State:new(config)
+	self = setmetatable({}, { __index = State })
+	return self
+end
+
+function State:set_state(name, msg)
+	return self.parent:set_state(name, msg)
+end
+
+function State:update(entity)
+	-- implemented per State
+end
+
+function State:draw(entity)
+	-- implemented per State
+end
+
+function State:on_enter(msg, prev)
+	-- implemented per State
+end
+
+function State:activate(entity)
+	-- implemented per State
+end
+
+function State:on_leave(msg, next)
+	-- implemented per State
+end
+
+return State
+:: lib/states/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTI1IDE2OjMwOjU5Iixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCJdXQ==
+:: lib/timers/
+:: lib/timers/Timer.lua
+--[[pod_format="raw",created="2025-05-07 01:04:03",modified="2025-05-31 02:17:28",revision=164]]
+local Timer = {}
+
+function Timer:new(t)
+	self = setmetatable({}, { __index = Timer })
+	self.timeout        = t
+	self.time_remaining = t
+	self.callbacks      = {}
+	return self
+end
+
+function Timer:set_callback(cb)
+	add(self.callbacks, cb)
+end
+
+function Timer:complete()
+	foreach(self.callbacks, function(cb)  cb() end)
+end
+
+return Timer                                       
+:: lib/timers/TimerRegistry.lua
+--[[pod_format="raw",created="2025-05-07 01:05:57",modified="2025-05-31 02:17:28",revision=364]]
+local Timer = include("lib/timers/Timer.lua")
+
+local TimerRegistry = {}
+
+function TimerRegistry:new()
+	self = setmetatable({}, { __index = TimerRegistry })
+	self.timers = {}
+	return self
+end
+
+function TimerRegistry:timeout(t, cb)
+	local timer = Timer:new(t)
+	timer:set_callback(cb)
+	timer:set_callback(function() del(self.timers, timer) end)
+	add(self.timers, timer)
+	return {
+		cancel = function() del(self.timers, timer) end
+	}
+end
+
+function TimerRegistry:interval(t, cb)
+	local timer = Timer:new(t)
+	timer:set_callback(cb)
+	add(self.timers, timer)
+	return {
+		cancel = function() del(self.timers, timer) end
+	}
+end
+
+function TimerRegistry:update()
+	foreach(self.timers, function(timer)
+		timer.time_remaining -= 1
+		if timer.time_remaining <= 0 then
+			timer.time_remaining = timer.timeout
+			timer:complete()
+		end
+	end)
+end
+
+return TimerRegistry
+:: lib/timers/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA1LTA3IDAxOjA1OjQ3Iixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCJdXQ==
+:: lib/AnimationSet.lua
+--[[pod_format="raw",created="2025-04-22 14:30:55",modified="2025-07-05 00:05:00",revision=1400]]
+local AnimationSet = {}
+
+function AnimationSet:new(config)
+	local self = setmetatable({}, { __index = AnimationSet })
+	assert(config.entity ~= nil)
+	assert(config.animations ~= nil)
+	assert(config.entity.hitbox ~= nil)
+	assert(config.entity.position ~= nil)
+	self.entity            = config.entity
+	self.animations        = config.animations
+	self.current_animation = config.default
+	self.current_tick      = 0
+	local anims = self.animations
+	local idx   = self.current_animation
+	self.current_frame_idx = flr(rnd(#anims[idx].frames)) + 1
+	return self
+end
+
+function AnimationSet:set_anim(anim)
+	assert(self.animations[anim] ~= nil, anim..": animation not in set")
+	self.current_animation = anim
+end
+
+function AnimationSet:advance()
+	local i = self.current_animation
+	local a = self.animations[i]
+	self.current_frame_idx += 1
+	self.current_tick = a.ticks
+	if self.current_frame_idx > #a.frames then
+		self.current_frame_idx = 1
+	end
+end
+
+function AnimationSet:update()
+	self.current_tick -= 1
+	if self.current_tick < 0 then
+		self:advance()
+	end
+end
+
+function AnimationSet:get_frame()
+	local animation_idx = self.current_animation
+	local animation = self.animations[animation_idx]
+	local frame_idx = self.current_frame_idx
+	local frame_data = animation.frames[frame_idx]
+	return frame_data
+end
+
+function AnimationSet:draw(ox, oy, hflip)
+	local x = self.entity.position.x + (ox or 0)
+	local y = self.entity.position.y + (oy or 0)
+	local frame_data = self:get_frame()
+	if type(frame_data) == "number" then
+		spr(frame_data, x, y, hflip or false)
+	elseif type(frame_data) == "table" then
+		local f = frame_data
+		sspr(f.s, f.sx, f.sy, f.sw, f.sh, x, y, f.sw, f.sh, hflip or false)
+	end
+end
+
+return AnimationSet
+:: lib/Camera.lua
+--[[pod_format="raw",created="2025-05-05 15:21:20",modified="2025-05-10 14:30:30",revision=301]]
+local Camera = {}
+
+function Camera:new(config)
+	self = setmetatable({}, { __index = Camera })
+	self.bounds   = {
+		x=config.x or 0,
+		y=config.y or 0,
+		w=config.w - SCREEN_W or 0,
+		h=config.h - SCREEN_H or 0
+	}
+	self.screen   = { w=480, h=270 }
+	self.position = { x=0, y=0 }
+	self.max_spd  = 5
+	self.pull     = 32
+	self.target   = config.target
+	return self
+end
+
+function Camera:attach(entity)
+	self.target = entity
+end
+
+function Camera:detach(entity)
+	self.target = nil
+end
+
+function Camera:move_to_target()
+	if self.target ~= nil then
+		self.position.x = self.target.position.x
+		self.position.y = self.target.position.y 
+	end
+end
+
+function Camera:update()
+	if self.target == nil then
+		return
+	end
+	local tx = (self.target.position.x - self.screen.w/2)
+	local ty = (self.target.position.y - self.screen.h/2)
+	local pos_dx = self.position.x + self.pull
+	if pos_dx < tx then
+		self.position.x += min(tx - pos_dx, self.max_spd)
+	end
+	local neg_dx = self.position.x - self.pull
+	if neg_dx > tx then
+		self.position.x += min(tx - neg_dx, self.max_spd)
+	end
+	local pos_dy = self.position.y + self.pull
+	if pos_dy < ty then
+		self.position.y += min(ty - pos_dx, self.max_spd)
+	end
+	local neg_dy = self.position.y - self.pull
+	if neg_dy > ty then
+		self.position.y += min(ty - neg_dx, self.max_spd)
+	end
+	local bnds = self.bounds
+	if (self.position.x < bnds.x) then
+		self.position.x = bnds.x
+	end
+	if (self.position.y < bnds.y) then
+		self.position.y = bnds.y
+	end
+	if (self.position.x > bnds.x + bnds.w) then
+		self.position.x = bnds.x + bnds.w
+	end
+	if (self.position.y > bnds.y + bnds.h) then 
+		self.position.y = bnds.y + bnds.h
+	end
+end
+
+function Camera:draw()
+	local p = self.position
+	camera(p.x, p.y)
+end
+
+return Camera
+:: lib/utils.lua
+--[[pod_format="raw",created="2025-04-25 15:54:27",modified="2025-05-26 16:49:43",revision=985]]
+function find(table, _f)
+	for k, v in pairs(table) do
+		if _f(v) == true then
+			return v
+		end
+	end
+	return nil
+end
+
+function is_zero(num, e)
+	local e = epsilon or 1e-1
+   return math.abs(num) < e
+end
+
+function iif(cond, a, b)
+	return cond and a or b
+end
+
+function norm(x, y)
+	local c = sqrt(x*x + y*y)
+	return x/c, y/c
+end
+
+
+function power(base, exponent)
+    -- Handle negative exponents by calculating reciprocal
+    if exponent < 0 then
+        return 1 / power(base, -exponent)
+    end
+
+    local result = 1
+    for i = 1, exponent do
+        result = result * base
+    end
+    return result
+end
+
+
+function reverse(tab)
+    for i = 1, #tab//2, 1 do
+        tab[i], tab[#tab-i+1] = tab[#tab-i+1], tab[i]
+    end
+    return tab
+end
+
+-- easing function --------------------------------------
+
+function easeoutlog(v)
+	return v == 1
+		and 1
+		or (1 - power(2, -10 * v))
+end
+
+function easeoutquartic(v)
+	v -= 1
+	return (1 - v*v*v*v)
+end
+
+-- debug functions --------------------------------------
+
+function profile(f)
+	local before = stat(1)
+	f()
+	local after = stat(1)
+	CPU_DIFF = after - before
+end
+
+function kv(table)
+	local buffer = ""
+	for k,v in pairs(table) do
+		buffer = buffer .. v.name .. "\n"
+	end
+	return buffer
+end
+:: lib/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTI1IDE2OjMwOjE1Iixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCJdXQ==
+:: map/
+:: map/0.map
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTIyIDAxOjA0OjMzIixtb2RpZmllZD0iMjAyNS0w
+NC0yMiAwMzoxNDowMCIscmV2aXNpb249MTQ1XV1sejQAcAAAAFIQAADwCHt7Ym1wPXVzZXJkYXRh
+KCJpMTYiLDMyAwBfIjAwMTAEAG8PAQBiD4AA------------------_GDwQAZ9EiKSxwYW5feD0t
+MTg2CwDyAHk9LTgyLHRpbGVfaD0xNgoAEHcKAKB6b29tPTAuNX19
+:: map/next.map
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA1LTI2IDE3OjU2OjExIixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCIscmV2aXNpb249MzI2Nl1dbHo0AMYAAADbCAAA-xF7e2JtcD11c2VyZGF0
+YSgiaTE2IiwzMiwxNywiMDAxOQQA----B1YzMDAyMQQAJzE0HAAPBABRKWEwAQAnMTgcAA_AANgv
+ZmYAAcsvMjEEAAQpMjABACcyMBwADwQAOA8BAAkmMmIEAA8BAGEmMmIEAA8BAGEmMmIEAA8BAEUv
+MTEEAGwfOQQAafEKIiksaGlkZGVuPWZhbHNlLHBhbl94PS02NAoA4nk9ODcsdGlsZV9oPTE2CgAQ
+dwoAgHpvb209MX19
+:: map/test
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTIyIDAzOjEzOjQwIixtb2RpZmllZD0iMjAyNS0w
+NC0yMiAwMzoxMzo0MyIscmV2aXNpb249MV1dbHo0AHAAAABSEAAA8Ah7e2JtcD11c2VyZGF0YSgi
+aTE2IiwzMgMAXyIwMDEwBABvDwEAYg_AAP------------------hg8EAGfRIikscGFuX3g9LTE4
+NgsA8gB5PS04Mix0aWxlX2g9MTYKABB3CgCgem9vbT0wLjV9fQ==
+:: map/test.map
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTIyIDAzOjE0OjAyIixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCIscmV2aXNpb249MTEyMzBdXWx6NABaAQAAWQkAAP8Re3tibXA9dXNlcmRh
+dGEoImkxNiIsMzIsMTgsIjAwMTkEAHRfMzAwMjEEAFcrMTR8AC8yMAEAWicxOIAAEWETAA_AAIIv
+ZmYEAAMPgABZDwABYS9mZnwARw6AAA98AB8hZmMHAA8kACYJgABPYjAwMQADGBAxBAAeMTQADyQA
+GQmAAA_EAQQvMDA8AAxfYTAwMjMEAAMIJAAPRAAKHjkoAA_AABYTYuQADwQAAR9jgABHKzIwyAQP
+PAUEARwAH2FEAAsIgAA5ZmQwAQAmMjgEAA8MAQofYRwAHwQBAC8xOUwBBBYyfAAABAAvMDCAAEwM
+BAAWYXwAJzI40AIO6AEPZAACL2ZigAAsH2JQAgQPLAARCDQADhwACgQAHzkEAOnxCCIpLGhpZGRl
+bj1mYWxzZSxwYW5feD03CADieT0yMyx0aWxlX2g9MTYKABB3CgCAem9vbT0xfX0=
+:: map/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTIyIDAxOjA0OjMyIixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCIsc3RvcmVkPSIyMDI1LTA0LTIyIDAxOjA0OjMyIl1d
+:: pal/
+:: pal/resurrect-64.hex
+b64$MmUyMjJmCjNlMzU0Ngo2MjU1NjUKOTY2YzZjCmFiOTQ3YQo2OTRmNjIKN2Y3MDhhCjliYWJi
+MgpjN2RjZDAKZmZmZmZmCjZlMjcyNwpiMzM4MzEKZWE0ZjM2CmY1N2Q0YQphZTIzMzQKZTgzYjNi
+CmZiNmIxZApmNzk2MTcKZjljMjJiCjdhMzA0NQo5ZTQ1MzkKY2Q2ODNkCmU2OTA0ZQpmYmI5NTQK
+NGMzZTI0CjY3NjYzMwphMmE5NDcKZDVlMDRiCmZiZmY4NgoxNjVhNGMKMjM5MDYzCjFlYmM3Mwoz
+MTM2MzgKY2RkZjZjCjkxZGI2OQozNzRlNGEKNTQ3ZTY0CjkyYTk4NApiMmJhOTAKMGI1ZTY1CjBi
+OGE4ZgowZWFmOWIKMzBlMWI5CjhmZjhlMgozMjMzNTMKNDg0YTc3CjRkNjViNAo0ZDliZTYKOGZk
+M2ZmCjQ1MjkzZgo2YjNlNzUKOTA1ZWE5CmE4ODRmMwplYWFkZWQKNzUzYzU0CmEyNGI2ZgpjZjY1
+N2YKZWQ4MDk5CjgzMWM1ZApjMzI0NTQKZjA0Zjc4CmY2ODE4MQpmY2E3OTAKZmRjYmIw
+:: pal/resurrect-64.pal
+b64$LS1bW3BvZCxiZ19jb2xvcj0wLGJsYWNrZXN0X2NvbG9yPTAsY3JlYXRlZD0iMjAyNS0wNC0y
+NyAyMDozMDozMiIsaGlkZGVuPXtbMF09ZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFs
+c2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2Us
+ZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFs
+c2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2Us
+ZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFs
+c2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2Us
+ZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFs
+c2UsZmFsc2V9LGhpZGRlbl90b2dnbGVzPXtbMF09ZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2V9LGh1
+ZV9vZmZzZXQ9MTAuOTY2NjY2NjY2NjY3LGljb249dXNlcmRhdGEoInU4IiwxNiwxNiwiMDAwMTAx
+MDEwMTAxMDEwMTAxMDEwMTAwMDAwMDAwMDAwMDAxMDcwNzA3MDcwNzA3MDcwNzA2MDEwMDAwMDAw
+MDAwMDEwNzA3MDcwNzA3MDcwNzA3MDYwNjAxMDAwMDAwMDAwMTA3MDcwNzA3MDcwNzA3MDcwNjA2
+MDYwMTAwMDAwMDAxMDcwNzA3MDcwNzA3MDcwNzA2MDYwNjA2MDEwMDAwMDEwNzA3MDcwNzA3MDcw
+NzA3MDcwNzA3MDcwMTAwMDAwMTA3MDcwNzA3MDcwNzA3MDcwNzA3MDcwNzAxMDAwMDAxMDcwNzA2
+MDYwMTAxMGQwZDAxMDEwNzA3MDEwMDAwMDEwNzA3MDYwNjAxMDEwZDBkMDEwMTA3MDcwMTAwMDAw
+MTA3MDcwMTAxMDcwNzA2MDYwZDBkMDcwNzAxMDAwMDAxMDcwNzAxMDEwNzA3MDYwNjBkMGQwNzA3
+MDEwMDAwMDEwNzA3MGQwZDAxMDEwZDBkMDYwNjA3MDcwMTAwMDAwMTA3MDcwZDBkMDEwMTBkMGQw
+NjA2MDcwNzAxMDAwMDAxMDcwNzA3MDcwNzA3MDcwNzA3MDcwNzA3MDEwMDAwMDEwNzA3MDcwNzA3
+MDcwNzA3MDcwNzA3MDcwMTAwMDAwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDAiKSxsb2Nr
+ZWQ9e1swXT1mYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxm
+YWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxz
+ZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxm
+YWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxz
+ZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxm
+YWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxz
+ZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZX0sbW9kaWZp
+ZWQ9IjIwMjUtMDQtMjggMDY6MzA6MTAiLG9rcGFsX3ZlcnNpb249IjEuMi4yIixwaWNrZXJzX21v
+ZGU9ImxpbmVhcl9odWUiLHJldmlzaW9uPTk0LHRlc3RfY3ViZV9jb2xvcnM9e1swXT17MSwxLDF9
+LHsxLDEsMX0sezEsMSwxfSx7MSwxLDF9LHsxLDEsMX0sezEsMSwxfSx7MSwxLDF9LHsxLDEsMX0s
+ezEsMSwxfSx7MSwxLDF9LHsxLDEsMX0sezEsMSwxfSx7MSwxLDF9LHsxLDEsMX0sezEsMSwxfSx7
+MSwxLDF9LHsxLDEsMX0sezEsMSwxfSx7MSwxLDF9LHsxLDEsMX0sezEsMSwxfSx7MSwxLDF9LHsx
+LDEsMX0sezEsMSwxfX0sdGVzdF9tb2RlPSJjdWJlcyIsdGVzdF9yYW1wX2NvbG9ycz11c2VyZGF0
+YSgidTgiLDEwLDI3LCIwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw
+MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw
+MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw
+MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw
+MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw
+MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw
+MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw
+MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw
+MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw
+MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAiKSx3aGl0ZXN0X2NvbG9y
+PTldXWx6NAAJAgAAFQIAAPFPdXNlcmRhdGEoImkzMiIsNjQsIjAwMmUyMjJmMDAzZTM1NDYwMDYy
+NTU2NTAwOTY2YzZjMDBhYjk0N2EwMDY5NGY2MjAwN2Y3MDhhMDA5YmFiYjIwMGM3ZGNkMDAwZgEA
+8EAwMDZlMjcyNzAwYjMzODMxMDBlYTRmMzYwMGY1N2Q0YTAwYWUyMzM0MDBlODNiM2IwMGZiNmIx
+ZDAwZjc5NjE3MDBmOWMyMmIwMDdhMzA0iADwBmU0NTM5MDBjZDY4M2QwMGU2OTA0ZTgA8RRiOTU0
+MDA0YzNlMjQwMDY3NjYzMzAwYTJhOTQ3MDBkNWUwNGAA8BVmZjg2MDAxNjVhNGMwMDIzOTA2MzAw
+MWViYzczMDAzMTM2MzhgACBkZvAAwDkxZGI2OTAwMzc0ZbAA8A01NDdlNjQwMDkyYTk4NDAwYjJi
+YTkwMDAwYjVlKAFwMGI4YThmMOkA8BtmOWIwMDMwZTFiOTAwOGZmOGUyMDAzMjMzNTMwMDQ4NGE3
+NzAwNGQ2NWK4AFBkOWJlNigAIGQzOAFQNDUyOTNAAUBiM2U3_AAwMDVlaQBgYTg4NGYzXwCgYWRl
+ZDAwNzUzY-gA8AZhMjRiNmYwMGNmNjU3ZjAwZWQ4MDl4ALAzMWM1ZDAwYzMyNCgA8AVmMDRmNzgw
+MGY2ODE4MTAwZmNhN8AAgGZkY2JiMCIp
+:: pal/test.pal
+b64$LS1bW3BvZCxiZ19jb2xvcj0wLGJsYWNrZXN0X2NvbG9yPTAsY3JlYXRlZD0iMjAyNS0wNC0y
+NiAyMzo0OTozMSIsaGlkZGVuPXtbMF09ZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFs
+c2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2Us
+ZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFs
+c2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2Us
+ZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFs
+c2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2Us
+ZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2UsZmFs
+c2UsZmFsc2V9LGhpZGRlbl90b2dnbGVzPXtbMF09ZmFsc2UsZmFsc2UsZmFsc2UsZmFsc2V9LGh1
+ZV9vZmZzZXQ9MzguNTMzMzMzMzMzMzMzLGljb249dXNlcmRhdGEoInU4IiwxNiwxNiwiMDAwMTAx
+MDEwMTAxMDEwMTAxMDEwMTAwMDAwMDAwMDAwMDAxMDcwNzA3MDcwNzA3MDcwNzA2MDEwMDAwMDAw
+MDAwMDEwNzA3MDcwNzA3MDcwNzA3MDYwNjAxMDAwMDAwMDAwMTA3MDcwNzA3MDcwNzA3MDcwNjA2
+MDYwMTAwMDAwMDAxMDcwNzA3MDcwNzA3MDcwNzA2MDYwNjA2MDEwMDAwMDEwNzA3MDcwNzA3MDcw
+NzA3MDcwNzA3MDcwMTAwMDAwMTA3MDcwNzA3MDcwNzA3MDcwNzA3MDcwNzAxMDAwMDAxMDcwNzA2
+MDYwMTAxMGQwZDAxMDEwNzA3MDEwMDAwMDEwNzA3MDYwNjAxMDEwZDBkMDEwMTA3MDcwMTAwMDAw
+MTA3MDcwMTAxMDcwNzA2MDYwZDBkMDcwNzAxMDAwMDAxMDcwNzAxMDEwNzA3MDYwNjBkMGQwNzA3
+MDEwMDAwMDEwNzA3MGQwZDAxMDEwZDBkMDYwNjA3MDcwMTAwMDAwMTA3MDcwZDBkMDEwMTBkMGQw
+NjA2MDcwNzAxMDAwMDAxMDcwNzA3MDcwNzA3MDcwNzA3MDcwNzA3MDEwMDAwMDEwNzA3MDcwNzA3
+MDcwNzA3MDcwNzA3MDcwMTAwMDAwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDAiKSxsb2Nr
+ZWQ9e1swXT1mYWxzZSx0cnVlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLHRydWUsdHJ1ZSxmYWxz
+ZSxmYWxzZSx0cnVlLGZhbHNlLHRydWUsdHJ1ZSxmYWxzZSxmYWxzZSx0cnVlLHRydWUsdHJ1ZSx0
+cnVlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLHRydWUsZmFsc2UsdHJ1ZSxm
+YWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxz
+ZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxm
+YWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxz
+ZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZSxmYWxzZX0sbW9kaWZpZWQ9IjIwMjUtMDQt
+MjYgMjM6NTk6MDAiLG9rcGFsX3ZlcnNpb249IjEuMi4yIixwaWNrZXJzX21vZGU9ImxpbmVhcl9o
+dWUiLHJldmlzaW9uPTQ4LHRlc3RfY3ViZV9jb2xvcnM9e1swXT17MTUsMzEsNH0sezIsMiwyfSx7
+NCwyMCwyMX0sezEwLDksMjV9LHs5LDI1LDI0fSx7OCwyNCwyfSx7MjYsMTEsMjd9LHsxMSwyNywz
+fSx7MjcsMywxOX0sezI4LDE3LDE5fSx7MjgsMTIsMTZ9LHsxMiwxNiwxfSx7NiwyOSwxM30sezI5
+LDEzLDE4fSx7MTMsMTgsMX0sezcsMjMsMTR9LHsyMywxNCwxM30sezE0LDMwLDE4fSx7Nyw2LDIy
+fSx7NiwyMiw1fSx7MjIsNSwyMX0sezEsMSwxfSx7MSwxLDF9LHsxLDEsMX19LHRlc3RfbW9kZT0i
+Y3ViZXMiLHRlc3RfcmFtcF9jb2xvcnM9dXNlcmRhdGEoInU4IiwxMCwyNywiMDAxODA4MTkwOTBh
+MWEwYjFiMDAwNjAwMDAwMjAwMDAwMDAwMDMwMDE2MDAwMjAwMDAwMjAwMDAxMzAwMDUwMDAwMDIw
+MDAwMDAwMDAxMDAwZDAwMDAwMDAyMDAwMDAwMTAwMDFkMDAwMDAwMDIwMDAwMDAxMTAwMTcwMDAw
+MDIwMDAwMDAwMDBjMDAwZTAwMDIwMjAwMDAwMjAwMWMwMDFlMTIwMjE1MTQwNDFmMGYwNzAwMDAw
+MDAwMDAwMDAwMDAwMDAwMDAwMDE0MDQxZjBmMDgxODAyMDAwMDE1MDUxNjA2MDcxNzBlMWUwMDAw
+MDExMDExMGMxYzFkMGQxMjAwMDAxMzAzMWIwYjFhMGEwOTE5MDAwMDAwMDAwMDAwMDAwMDAwMDAw
+MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw
+MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw
+MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw
+MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw
+MDAwMDAwMDAwMDAwMDAwIiksd2hpdGVzdF9jb2xvcj03XV1sejQAGgEAABUCAADwVHVzZXJkYXRh
+KCJpMzIiLDY0LCIwMDRkMDgyOTAwMWQyYjUzMDA5NjJkNjcwMDU3N2I2NTAwYjY1NDNmMDA2ZjRm
+MzEwMGMyYzNjNzAwZmZmMWU4MDBlMTI2NTYwMGZiYjc2ZRgA8BVlYzI3MDA3ZWQ2NzIwMDI5YWRm
+ZjAwODM3NjljMDBmNTc4ZGQoAMBkN2M0MDAyNDYzYjABAPALYTVhMTAwNjU0Njg4MDAxMjUzNTkw
+MDcxMmSgAPAFMzgyYjFhMDBhYjcyNGEwMGZjYThYAPAHOWYyMzRmMDBjMDg4MDEwMDk1ZjA0MkgA
+EWGAAPAGNjRkZmY2MDBhOTlmZWUwMGQ4M2FhsAAhNThgAA8BAOhQMDAwIik=
+:: pal/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTI2IDIzOjQ5OjExIixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCJdXQ==
+:: scenes/
+:: scenes/states/
+:: scenes/states/level.lua
+--[[pod_format="raw",created="2025-05-26 19:11:21",modified="2025-05-26 19:26:29",revision=8]]
+Idle = State:new()
+
+Transition = State:new()
+
+function Transition:on_enter(msg)
+	self.scn     = msg.scn
+	self.y       = 0
+	self.reverse = false
+end
+
+function Transition:update()
+	if not self.reverse then
+		self.y += 2
+		if self.y > 270 then
+			self.reverse = true
+			
+		end
+	else
+		self.y -= 2
+		if self.y < 0 then
+			self:set_state("idle")
+		end
+	end
+end
+
+function Transition:draw()
+	rectfill(0,0,480,self.y, 9)
+end
+
+
+TransitionFsm = Fsm:new {
+		default = "idle",
+		states = {
+			idle = Idle,
+			transition = Transition
+		}
+	}
+:: scenes/states/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA1LTI2IDE5OjExOjEyIixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCJdXQ==
+:: scenes/next.lua
+--[[pod_format="raw",created="2025-05-26 18:00:18",modified="2025-05-30 03:33:28",revision=608]]
+-- when crossing exit, load new map
+-- pan camera over to new map
+-- after camera pan, remove old map
+
+return {
+	name  = "next",
+	map   = "map/next.map",
+	h     = 16,
+	w     = 31,
+	entries = {
+		{ from = "test", x=0, y=14 }
+	},
+	exits = {
+		{
+			x = 0,
+			y = 12*16,
+			h = 3*16,
+			w = 1,
+			scene = "test",
+		}
+	}
+}
+:: scenes/SceneManager.lua
+--[[pod_format="raw",created="2025-04-24 04:02:06",modified="2025-05-31 01:53:16",revision=3445]]
+local Camera       = include("lib/Camera.lua")
+local SceneManager = {}
+
+SceneManager.objects = {}
+SceneManager.scenes = {
+	["test"] = "scenes/test.lua",
+	["next"] = "scenes/next.lua"
+}
+
+function SceneManager:new(config)
+	self = setmetatable({}, { __index = SceneManager })
+	return self
+end
+
+function SceneManager:draw_map()
+	self.cam:draw()
+	map(self.map)
+end
+
+function SceneManager:draw_objs()
+	foreach(self.objects, function(obj)
+		if obj.draw ~= nil then
+			obj:draw(obj) 
+			obj:dbg_draw()
+		end
+	end)
+end
+
+function SceneManager:update()
+	self.cam:update()
+	foreach(self.objects, function(obj)
+		if obj.update ~= nil then
+			obj:update()
+		end
+	end)
+end
+
+function SceneManager:set_respawn(spawn_point)
+	self.respawn_pnt = spawn_point
+end
+
+function SceneManager:get_respawn()
+	return self.respawn_pnt
+end
+
+function SceneManager:set_player(player)
+	assert(player ~= nil, "Nil player cannot be added to scene for obv reasons")
+	self.player = player
+	assert(self.player ~= nil)
+	self.cam:attach(self.player)
+end
+
+function SceneManager:get_player()
+	return self.player
+end
+
+function SceneManager:respawn()
+	assert(self.player ~= nil, "Player in scene manger is nil, cannot remove")
+	del(self.objects, self.player)
+	self.player = nil
+	self.cam:detach()
+	assert(self.player == nil)
+	self.respawn_pnt:make_player()
+end
+
+function SceneManager:load_scene(scene_name)
+	local scene_file = self.scenes[scene_name]
+	assert(scene_file ~= nil, "Scene not valid <" .. scene_name .. ">")
+	local data = include(scene_file)
+	self.objects   = {}
+	self.prev_scn  = self.curr_scn
+	self.curr_scn  = data.name
+	self.scene_h   = data.h
+	self.scene_w   = data.w
+	self.map = fetch(data.map)[1].bmp
+	self.cam = Camera:new {
+		w      = data.w * 16, 
+		h      = data.h * 16
+	}
+	if data.exits then
+		for _,e in pairs(data.exits) do
+			Exit:new{
+				scene    = e.scene,
+				position = { x=e.x, y=e.y},
+				hitbox   = { x=0, y=0, w=e.w, h=e.h }
+			}
+		end
+	end
+	if self.prev_scn then
+		for _,entry in pairs(data.entries) do
+			if self.prev_scn == entry.from then
+				Player:new{
+					position = vec(entry.x*16, entry.y*16)
+				}
+			end	
+		end
+	end
+	local lava_tiles = {}
+	for i = 0, self.scene_w do
+		for j = 0, self.scene_h do
+			local tile = self.map:get(i, j)
+			for Entity in all(entities) do
+				if type(Entity.tile) == "table" and Entity.tile.og == tile then
+					Entity:new { position = vec((i)*16,(j)*16) }
+					self.map:set(i, j, Entity.tile.replace)
+				end
+			end
+			if tile == 254 then
+				add(lava_tiles, { x=i, y=j })
+			end
+		end
+	end
+	self.cam:move_to_target()
+	--[[
+	local regions = initialize_lava(lava_tiles)
+	foreach(regions, function (r)
+		local e = Entity(Lava, 0, 0, r)
+		add(self.objects, e)
+	end)
+	]]
+end
+
+--[[
+function bfs(sx, sy)
+	local queue = {{x=sx,y=sy}}
+	local region = {}
+	visit(visited, sx, sy)
+	while #queue > 0 do
+		local cell = queue[1]
+		add(region, cell)
+		del(queue, cell)
+		for _, dir in pairs({{1,0},{-1,0},{0,1},{0,-1}}) do
+			local nx, ny = cell.x + dir[1], cell.y + dir[2]
+			if grid[nx] and grid[nx][ny] and not (visited[nx] and visited[nx][ny]) then
+				visited[nx] = visited[nx] or {}
+				visited[nx][ny] = true
+				add(queue, {x=nx, y=ny})
+			end
+		end
+	end
+	return region
+end
+
+function visit(tbl, x, y)
+	tbl[x] = tbl[x] or {}
+	tbl[x][y] = true	
+end
+
+function bounding_box(region)
+	local min_x, max_x = region[1].x, region[1].x
+	local min_y, max_y = region[1].y, region[1].y
+	for _, cell in pairs(region) do
+		if cell.x > max_x then max_x = cell.x end
+		if cell.x < min_x then min_x = cell.x end
+		if cell.y > max_y then max_y = cell.y end
+		if cell.y < min_y then min_y = cell.y end
+	end	
+	return {
+		x = min_x,
+		y = min_y,
+		w = max_x - min_x + 1,
+		h = max_y - min_y + 1
+	}
+end
+
+function initialize_lava(lava_tiles)
+	-- lookup grid & visited grid
+	grid = {}
+	visited = {}
+	local merged = {}
+	for _, t in pairs(lava_tiles) do
+		visit(grid, t.x, t.y)
+	end
+
+	local regions = {}
+	for x, col in pairs(grid) do
+		for y, _ in pairs(col) do
+			if not (visited[x] and visited[x][y]) then
+				local region = bfs(x, y)
+				add(regions, bounding_box(region))
+			end
+		end
+	end
+	return regions
+end
+]]--
+
+return SceneManager
+:: scenes/states.lua
+--[[pod_format="raw",created="2025-05-26 19:10:49",modified="2025-05-26 19:16:17",revision=4]]
+Fsm:new {
+		default = "idle",
+			states = {
+			idle        = include("entity/player/states/idle.lua"),
+			walk        = include("entity/player/states/walk.lua"),
+			fall        = include("entity/player/states/fall.lua"),
+			jump        = include("entity/player/states/jump.lua"),
+			dash        = include("entity/player/states/dash.lua"),
+			shoot       = include("entity/player/states/shoot.lua"),
+			rocket      = include("entity/player/states/rocket.lua"),
+			wall_slide  = include("entity/player/states/wall_slide.lua"),
+			double_jump = include("entity/player/states/double_jump.lua"),
+			wall_jump   = include("entity/player/states/wall_jump.lua"),
+			ghost       = include("entity/player/states/ghost.lua")
+		}
+	}
+:: scenes/test.lua
+--[[pod_format="raw",created="2025-04-24 04:03:14",modified="2025-07-05 00:05:00",revision=1256]]
+-- when crossing exit, load new map
+-- pan camera over to new map
+-- after camera pan, remove old map
+
+return {
+	name  = "test",
+	map   = "map/test.map",
+	h     = 17,
+	w     = 31,
+	entries = {
+		{ from = "next", x=30, y=13 }
+	},
+	exits = {
+		{
+			x = 30*16+14,
+			y = 12*16,
+			h = 3*16,
+			w = 1,
+			scene = "next",
+		}
+	}
+}
+:: scenes/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTI0IDA0OjAxOjU3Iixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCJdXQ==
+:: sfx/
+:: sfx/0.sfx
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTIyIDAxOjA0OjMzIixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCIscmV2aXNpb249MTEwMDVdXWx6NAAXAgAAnwkAAPA6cHh1AAMoAAAEAAQP
+QBACDgABoAEgAqAOAA8QAA3wyggCAwQFBgcBD-OQAQkKCw8MDw0PDg8PAA--kAIPEQ8SDxMPFA8V
+DxYPFxMA8BQDDxkPGg8bDxwPHQ8eDx8CD-_QDyAPIQ8iDyMPJA8lDyYPJycA8QEPKA8pDyoPKw8s
+Dy0PLg8vFADxADAPMQ8yDzMPNA81DzYPNxQA-wU4DzkPOg87DzwPPQ8_Dz8AD--w-wEA6-AuWgEQ
+Bg8lEAEgARAR8AACEAIPJhABIA8hEAEJEAEAD1Dwww--DQ8eDyIAB-DAAQAP_AoP-w_AD-cPDQHw
+CTwAECA8ACEgATwAEQw7AN0gATAPQPDDDygP--DGMQAfDDAA-wkf-wEA3P8X_A9AAApADx8P-w8f
+T-8PMw--DzCP-w8-D-8PPC--DycP-w8kL-8gAA3DAA4ATgAOAI4ADgAuBAAJEADQD1AOCE4MDgyO
+DA4MLgQAGwgQACPwcIgA-wcOBE4PJg4PIo4PPg4POi4PMg4PLi4EFgACD3UADQBkAEkPMA4FdQA9
+BQ4FdQD-Bx0OC04PJA4PIY4PPA4POS4FDg8tLgsVAAEPcwASOUAOA3MAFwMQADDwcANyAFEbDglO
+BNAAETfQABAr0AAeCRUAD_UAEzkIDghxAAgQAABxAFAPEED_sAkAHw0IAAQbChAADwgA-5sf-wEA
+-5lQ-----yA=
+:: sfx/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTIyIDAxOjA0OjMyIixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCIsc3RvcmVkPSIyMDI1LTA0LTIyIDAxOjA0OjMyIl1d
+:: states/
+:: states/Level.lua
+--[[pod_format="raw",created="2025-05-06 00:24:17",modified="2025-05-30 03:33:28",revision=2292]]
+local Level = State:new()
+
+function Level:on_enter(msg)
+	scene_manager = SceneManager:new()
+	scene_manager:load_scene(msg.scn)
+end
+
+function Level:draw()
+	scene_manager:draw_map()
+	fire_particle_sys:draw()
+	explosion_sys:draw()
+	ghost_sys:draw()
+	scene_manager:draw_objs()
+end
+
+function Level:update()
+	scene_manager:update()
+	fire_particle_sys:update()
+	explosion_sys:update()
+	ghost_sys:update()
+end
+
+return Level
+:: states/Title.lua
+--[[pod_format="raw",created="2025-05-06 00:23:07",modified="2025-05-28 22:03:06",revision=1667]]
+local TitleState = State:new()
+
+function TitleState:on_enter()
+	self.started = false
+end
+
+function TitleState:update()
+	if (btn(BUTTON_A) or btn(BUTTON_X)) and not self.started then
+		self.started = true
+		Transitions:begin{
+			callback = function()
+				self:set_state("ingame", { scn = "test" })
+			end
+		}
+	end
+end
+
+function TitleState:draw()
+	print("TRANSITION FIXED", 240-42,135, 13)
+end
+
+return TitleState
+:: states/.info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA1LTA2IDAwOjIyOjU2Iixtb2RpZmllZD0iMjAyNS0w
+Ny0wNSAwMDowNTowMCJdXQ==
+:: design.txt
+--[[pod_format="raw",created="2025-05-06 04:00:20",modified="2025-06-06 03:36:24",revision=3396]]
+######################################################################
+##### SLUGMA
+######################################################################
+
+fast combo-based platformer with emphasis on chaining movement with precision
+
+######################################################################
+##### UNIQUE SELLING POINT
+######################################################################
+
+Interesting interaction system - you have a single special ability (fireball), but
+can use it in diverse ways by affecting the world around you
+
+	- affecting blocks significantly changes the environment
+	- use it for mobility - pause midair while shooting, use it as a double jump
+	- dash into your fireball to wreak havoc
+
+Shooting your fireball will cause you to lose charge, but dashing into it as it explodes
+can "reclaim" the charge, so the game will be centered around fast-paced puzzle
+platformer challenges that require an increasing level of precision.
+
+######################################################################
+##### PLAYER EXPERIENCE
+######################################################################
+
+You were raised as a chicken. It's the only life you've ever known, until you
+discovered you're actually a Phoenix.
+
+Seeking connection, you decide to venture into an active volcano to reach it's core
+hoping to understand your true nature and where you came from.
+
+Moving through the levels, the player will slowly be introduced to new mechanics that
+spice up the gameplay in unique ways. These new mechanics will have been present all
+along, but the progression will force use of them at specific key points to teach the 
+player that they have more at their disposal than they originally thought.
+
+Additionally, tiny bits of lore will be dropped in as interactable NPC dialog. You
+won't talk (you are an animal after all), but the other characters will be able
+to dispense narattive to keep the experience interesting, and drip-feed answers to 
+looming questions.
+
+The style will be very lacksadaisical, and mellow. As the journey continues, the tone
+will become more serious to reflect the changing difficulty, and what were previously
+chill/wacky songs will turn into more serious anthems to push you to your goal.
+
+######################################################################
+##### CORE LOOPS
+######################################################################
+
+The primary loop will be uncovering new elemtents in the game, and learning how to
+interact with them. The interaction system will be rich, and expose a multitude of ways
+to traverse a level. A couple examples:
+
+- learning that you can dash into an explosion to achieve fire power,
+not only through collectable coins
+- learning that dashing into a fireball sends you on an arc that renders the player
+invulnerable to some level hazards AND allows you to retain fire power for later
+obstacles
+
+######################################################################
+##### PROTOTYPES
+######################################################################
+
+There's a couple ideas that we need to try out
+
+- "momentum" system: basically, increase a "charge" on the player as they move around
+and use abilities. The more they use, the higher the charge, which grants them access
+to even better abilities and additional modifiers like movement speed. Should be
+easy to add more content, since we can add additional items that change how the player
+perceives the core loop of the charge meter
+(e.g. items to extend the max, slow the drain, change other qualities based on charge)
+
+	results:
+
+- "timer" system: Add negative consequences of the "charge" being on the player
+for too long or too high. This might complement the momentum system, since it will
+be a juggle between complex platforming elements and slower methodical gameplay.
+it could also end up being annoying and taking players out of flow. maybe using
+abilities will deplete charge and that's how balance is achieved.
+
+	results:
+
+- "bouncy projectiles" system: Add blocks that ricochet projectiles to allow the player
+to reclaim them to drop charge temporarily
+
+	results:
+	
+
+######################################################################
+##### HIERARCHY/DESIGN
+######################################################################
+
+- MAIN FSM
+	- TITLE SCREEN
+	- SPLASH SCREEN
+	- TRANSITION
+	- IN GAME
+
+- IN GAME
+	- IN LEVEL
+	- PAUSED
+	- TRANSITION
+	
+- IN LEVEL
+	- PLAYING
+	- DIALOG
+	- CUTSCENE
+	- TRANSITION
+	
+- PAUSED
+	- OPTIONS MENU
+	- RESUME/QUIT MENU
+	
+- TRANSITION
+	- START
+	- CALLBACK (OPTIONAL)
+	- END
+:: GameState.lua
+--[[pod_format="raw",created="2025-05-06 00:21:41",modified="2025-05-27 04:53:26",revision=1410]]
+--[[
+- MAIN FSM
+	- TITLE SCREEN
+	- SPLASH SCREEN
+	- TRANSITION
+	- IN GAME
+]]
+local GameState = Fsm:new {
+	default = "title",
+	states = {
+		title      = include("states/Title.lua"),
+		ingame     = include("states/Level.lua"),
+		transition = include("states/Transition.lua")
+	}
+}
+
+return GameState
+:: globals.lua
+--[[pod_format="raw",created="2025-05-07 01:20:15",modified="2025-07-05 00:05:00",revision=3742]]
+-- global classes ---------------------------------------
+AnimationSet   = include("lib/AnimationSet.lua")
+Fsm            = include("lib/states/Fsm.lua")
+State          = include("lib/states/State.lua")
+SceneManager   = include("scenes/SceneManager.lua")
+GameState      = include("GameState.lua")
+TimerRegistry  = include("lib/timers/TimerRegistry.lua")
+Emitter			= include("lib/particles/Emitter.lua")
+ParticleSystem = include("lib/particles/ParticleSystem.lua")
+	
+
+-- particle systems -------------------------------------
+fire_particle_sys = ParticleSystem:new{
+	lifetime      = 20,
+	max_particles = 1000, 
+	color_ramp    = { 18, 17, 16, 10, 1 },
+	size_ramp     = { 3, 2, 1 }
+}
+
+explosion_sys = ParticleSystem:new{
+	lifetime      = 20,
+	max_particles = 1000,
+	color_ramp    = { 18, 17, 11, 10, 1 },
+	size_ramp     = { 5, 4, 2, 1 }
+}
+
+ghost_sys     = ParticleSystem:new{
+	lifetime      = 10,
+	max_particles = 200,
+	color_ramp    = { 8, 7, 6 },
+	size_ramp     = { 3, 2, 1 }
+}
+
+bg_fire_sys = ParticleSystem:new{
+	lifetime      = 20,
+	max_particles = 500, 
+	color_ramp    = { 20, 19, 49},
+	size_ramp     = { 3, 2, 1 }
+}
+
+
+-- global classes / singletons --------------------------------
+AnimationSet   = include("lib/AnimationSet.lua")
+Fsm            = include("lib/states/Fsm.lua")
+State          = include("lib/states/State.lua")
+SceneManager   = include("scenes/SceneManager.lua")
+TimerRegistry  = include("lib/timers/TimerRegistry.lua")
+Emitter			= include("lib/particles/Emitter.lua")
+GameState      = include("GameState.lua")
+Transitions    = include("Transitions.lua")
+
+
+-- entities ---------------------------------------------------
+include("entity/Entity.lua")
+include("entity/blocks/BombBlock.lua")
+include("entity/blocks/BounceBlock.lua")
+include("entity/player/Player.lua")
+include("entity/fire-coin/FireCoin.lua")
+include("entity/lava/Lava.lua")
+include("entity/spawn/Spawn.lua")
+include("entity/explosion/Explosion.lua")
+include("entity/fire-ball/Fireball.lua")
+include("entity/spawn/Respawn.lua")
+include("entity/Exit.lua")
+include("entity/enemies/Blob.lua")
+
+-- resolution -------------------------------------------------
+SCREEN_W = 480
+SCREEN_H = 270
+
+-- buttons ----------------------------------------------------
+BUTTON_LEFT  = 0
+BUTTON_RIGHT = 1
+BUTTON_DOWN  = 2
+BUTTON_UP    = 3
+BUTTON_A     = 4
+BUTTON_X     = 5
+BUTTON_Y     = 13
+BUTTON_B     = 12
+BUTTON_L     = 14
+BUTTON_R     = 15
+
+-- Debug options for figuring weird stuff out -----------
+DEBUG_ACTIVE = false
+DEBUG = {
+	HITBOX   = false,
+	STATES   = true,
+	CPU      = true,
+	PROFILER = true,
+	VAL      = true
+}
+
+DBG      = ""
+CPU_DIFF = 0 -- used in utils/profiler
+:: label.qoi
+b64$cW9pZgAAAeAAAAEOBAH_LiIv-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-dX_HrxzwDLFIMMyIMIy
+wCDAMsAgwzLEIDLBIDIgwTIgwzIgMsAgMsQgwjIgMsMgwDLBIMAywCAywCAy-f39-f390yAywCAy
+xiAywSAywiAywCAywSAyxiAywSAywCAywiAywSAywCAyxCAywiAywiAywCAyIDLAIDIgMsAgMv39
+-f39-dMgMsAgMsYgMsEgMsIgMsQgMsYgMsEgMsAgMsIgMsEgMsAgMsQgMsIgMsIgMsAgMiAywiAy
+wCAy-f39-f390yDCMsYgMsEgwTLBIMAywiAyxiAyIDIgMsAgMsIgMsEgwjLEIMEywCAywiDCMsAg
+wDLAIMIy-f39-f390yAywCAyxiAywSAyxSAywSAyxiAyIDIgMsAgMsIgMsEgMsAgMsQgMsIgMsIg
+MsAgMsIgMiAywCAy-f39-f390yAywCAyxiAywSAywiAywCAywSAyxiDAMiDAMsAgMsIgMsEgMsAg
+MsQgMsIgMsIgMsAgMiAywCAyIDLAIDL9-f39-f3TIDLAIDLGIDLBIMIywCDAMsIgMsYgMsEgMiDB
+MsEgMsEgMsAgMsQgMsIgwjIgMsAgMsAgwDLAIDLAIDL9-f39-eyzXDL9-f39-f396iL_m6uyIjL9
+-f39-f396SI7wCIy-f39-f39-egiO8EiMv39-f39-f3nIjvCIjL9-f39-f395iI7wCLAMv39-f39
+-f3oIsA7IjL9-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39
+-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-f39-fMAAAAAAAAAAQ==
+:: main.lua
+--[[pod_format="raw",created="2025-04-22 01:04:33",modified="2025-07-05 00:05:00",revision=9856]]
+include("lib/utils.lua")
+include("physics.lua")
+include("globals.lua")
+
+transitions = Transitions:new()
+
+function _init()
+   timers = TimerRegistry:new()
+	state = GameState
+   state:set_state("title", { scn = "test" })
+   poke4(0x5000, get(fetch(pwd().."/pal/resurrect-64.pal")))
+	bg_emitter  = Emitter:new {
+		rate = 2,
+		sys  = bg_fire_sys,
+		init_pos = function() return vec(rnd(480),rnd(270)) end,
+		init_vel = function()
+			return vec(rnd(1) - 0.5, rnd(1) - 0.5)
+		end,
+		init_acc = function()
+			return vec(0, 0)
+		end
+	}
+end
+
+function _draw()
+	cls(0)
+	fillp( 
+  0b10101010,
+  0b01010101,
+  0b10101010,
+  0b01010101,
+  0b10101010,
+  0b01010101,
+  0b10101010,
+  0b01010101
+	)
+	rectfill(0,0,480,270,49)
+	fillp()
+   state:draw()
+	bg_fire_sys:draw()
+	transitions:draw()
+   if DEBUG_ACTIVE then
+	   local i = 1
+	   local offset = 104
+	   camera(0,0)
+	   rectfill(375,205,480,270,1)
+	   for k,v in pairs(DEBUG) do
+	   	value = "NOT SET"
+	   	if k == "CPU" then value = stat(1) end
+	   	if k == "VAL" then value = DBG end
+	   	if k == "HITBOX" then value = tostr(DEBUG.HITBOX) end
+	   	print(k..": "..value, 480-offset+4, 270-i*12, 5)
+	   	i += 1
+	  	end
+	end
+end
+ 
+function _update()
+	if flr(t()*60)%5 == 0 then
+		bg_emitter:update()
+		bg_fire_sys:update()
+	end
+	state:update()
+	timers:update()
+	transitions:update()
+end
+:: physics.lua
+--[[pod_format="raw",created="2025-04-22 02:48:41",modified="2025-05-26 15:01:57",revision=1853]]
+function test_pnt(x,y)
+	local m = scene_manager.map
+	local tile = m:get(x/16, y/16)
+	return fget(tile, 0)
+end
+
+-- returns distance to collision if detected
+function collide_down(position, hitbox)
+	local ty = position.y + hitbox.y + hitbox.h
+	local tx1 = position.x + hitbox.x
+	local tx2 = position.x + hitbox.x + hitbox.w
+	for j = 0, 16, 1 do
+		local left_collision = test_pnt(tx1, ty+j) 
+		local right_collision = test_pnt(tx2, ty+j)
+		if left_collision or right_collision then
+			return j - 1
+		end
+	end
+	return nil
+end
+
+-- returns distance to collision if detected
+function collide_up(position, hitbox)
+	local ty = position.y + hitbox.y
+	local tx1 = position.x + hitbox.x
+	local tx2 = position.x + hitbox.x + hitbox.w
+	for j = 0, 16, 1 do
+		local left_collision = test_pnt(tx1, ty-j)
+		local right_collision = test_pnt(tx2, ty-j)
+		if left_collision or right_collision then
+			return (j * -1) + 1
+		end
+	end
+	return nil
+end
+
+-- returns distance to collision if detected
+function collide_right(position, hitbox)
+	local tx = position.x + hitbox.x + hitbox.w
+	local ty1 = position.y + hitbox.y
+	local ty2 = position.y + hitbox.y + hitbox.h
+	for i = 0, 16, 1 do
+		local upper_collision = test_pnt(tx+i, ty1)
+		local lower_collision = test_pnt(tx+i, ty2)
+		if upper_collision or lower_collision then
+			return i - 1
+		end
+	end
+	return nil
+end
+
+-- returns distance to collision if detected
+function collide_left(position, hitbox)
+	local tx = position.x + hitbox.x
+	local ty1 = position.y + hitbox.y
+	local ty2 = position.y + hitbox.y + hitbox.h
+	for i = 0, 16, 1 do
+		local upper_collision = test_pnt(tx-i, ty1)
+		local lower_collision = test_pnt(tx-i, ty2)
+		if upper_collision or lower_collision then
+			return (i * -1) + 1
+		end
+	end
+	return nil
+end
+
+function collide_x(entity, dx)
+	if dx > 0 then 
+		local dist_to_collide = collide_right(entity.position, entity.hitbox)
+		if dist_to_collide ~= nil then
+			return min(dx, dist_to_collide) 
+		end
+	end
+	if dx < 0 then
+		local dist_to_collide = collide_left(entity.position, entity.hitbox)
+		if dist_to_collide ~= nil then
+			return min(abs(dx), abs(dist_to_collide)) * -1
+		end
+	end
+	return dx
+end
+
+function collide_y(entity, dy)
+	if dy > 0 then
+		local dist_to_collide = collide_down(entity.position, entity.hitbox)
+		if dist_to_collide ~= nil then
+			return min(dy, dist_to_collide) 
+		end
+	end
+	if dy < 0 then
+		local dist_to_collide = collide_up(entity.position, entity.hitbox)
+		if dist_to_collide ~= nil then
+			return min(abs(dy), abs(dist_to_collide)) * -1
+		end
+	end
+	return dy
+end
+
+function is_on_ground(entity)
+	local position = entity.position
+	local hitbox = entity.hitbox
+	local tx = position.x + hitbox.x
+	local ty = position.y + hitbox.y + hitbox.h + 1
+	local m = scene_manager.map
+	for i = 0, hitbox.w, 1 do
+		local collision = fget(m:get((tx+i)/16,ty/16), 0)
+		if collision then
+			return true
+		end
+	end
+	return false
+end
+
+function is_next_to_wall(entity)
+	local px1 = entity.position.x + entity.hitbox.x
+	local py1 = entity.position.y + entity.hitbox.y
+	local px2 = entity.position.x + entity.hitbox.x + entity.hitbox.w
+	local py2 = entity.position.y + entity.hitbox.y + entity.hitbox.h
+	if test_pnt(px1-1,(py1+py2)/2) then return 1 end
+	if test_pnt(px2+1,(py1+py2)/2) then return -1 end
+	return nil
+end
+:: Transitions.lua
+--[[pod_format="raw",created="2025-05-26 22:30:17",modified="2025-05-31 01:53:16",revision=1702]]
+Transitions = {}
+Transitions.duration = 30
+Transitions.col_ramp = {49,19,20}
+
+function sample_border()
+	local tbl = {
+		vec(rnd(480),rnd(16)),
+		vec(rnd(480),rnd(16)+254),
+		vec(rnd(16),rnd(270)),
+		vec(rnd(16)+464,rnd(270)),
+	}
+	return tbl[flr(rnd(4)+1)]
+end
+
+function Transitions:new(config)
+	self = setmetatable({}, { __index = Transitions})
+	return self
+end
+
+function Transitions:begin(config)
+	assert(config.callback ~= nil)
+	self.active   = true
+	self.callback = config.callback
+	self.sticks   = 0
+	self.ticks    = 0
+	self.delta    = 1
+end
+
+function Transitions:update()
+	if self.active then
+		self.sticks += 1
+		self.ticks  += self.delta
+		if self.ticks >= self.duration then
+			self.delta *= -1
+			self.callback()
+		end
+		if self.ticks <= 0 then
+			self.callback = nil
+			self.active = false
+		end
+	end
+end
+
+function Transitions:draw()
+	camera(0,0)
+	if self.active then
+		local nc = #self.col_ramp
+		local idx = min(flr(self.ticks/self.duration*nc)+1, nc)
+		local c = max(self.col_ramp[idx], nc)
+		self.idx = idx
+		for i=-1,52 do
+			for j=-1,36 do
+				circfill(
+					i*10-5 + sin(j/64+self.sticks/128)*16,
+					j*10-5 + cos(i/32+self.sticks/128)*16,
+					self.ticks/4,
+					self.col_ramp[idx]
+				)
+			end
+		end
+	end
+	camera(0,0)
+	print(stat(1),4,4,9)
+end
+
+return Transitions
+:: .info.pod
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA0LTIyIDAzOjQ3OjQ3IixpY29uPXVzZXJkYXRhKCJ1
+OCIsMTYsMTYsIjAwMDAwMDAxMDEwMTAxMDEwMTAxMDEwMTAxMDAwMDAwMDAwMDAxMDcwNzA3MDcw
+NzA3MDcwNzA3MDcwMTAwMDAwMDAxMDcxMjEyMTIxMjEyMTIxMjEyMTIxMjA3MDEwMDAxMDcxMjEy
+MTIxMjAxMDEwMTAxMTIxMjEyMTIwNzAxMDEwNzEyMTIxMjAxMDEwZDBkMGQwMTEyMTIxMjA3MDEw
+MTA3MTIxMjAxMDEwZDBkMDYwZDA2MDExMjEyMDcwMTAxMDcxMjEyMDEwMTBkMGQwNjBkMDYwMTEy
+MTIwNzAxMDEwNzEyMTIwMTAxMGQwZDBkMGQwZDAxMTIxMjA3MDEwMTA3MTIxMjAxMDEwMTBkMGQw
+ZDAxMDExMjEyMDcwMTAxMDcxMjEyMTIwMTAxMDEwMTAxMDExMjEyMTIwNzAxMDEwNzEyMTIxMjEy
+MDEwMTAxMDExMjEyMTIxMjA3MDEwMTFkMDcxMjEyMTIxMjEyMTIxMjEyMTIxMjA3MWQwMTAxMWQx
+ZDA3MDcwNzA3MDcwNzA3MDcwNzA3MWQxZDAxMDAwMTFkMWQxZDFkMWQxZDFkMWQxZDFkMWQxZDAx
+MDAwMDAwMDExZDFkMWQxZDFkMWQxZDFkMWQxZDAxMDAwMDAwMDAwMDAxMDEwMTAxMDEwMTAxMDEw
+MTAxMDAwMDAwIiksbG93Y29sX2ljb249dHJ1ZSxtb2RpZmllZD0iMjAyNS0wNy0wNSAwMDowNTow
+MiIscnVudGltZT0xOCxzdG9yZWQ9IjIwMjUtMDQtMjIgMDM6NDU6MTkiLHdvcmtzcGFjZXM9e3ts
+b2NhdGlvbj0iZ2Z4LzAuZ2Z4Iix3b3Jrc3BhY2VfaW5kZXg9Mn0se2xvY2F0aW9uPSJtYXAvdGVz
+dC5tYXAiLHdvcmtzcGFjZV9pbmRleD0zfSx7bG9jYXRpb249Im1hcC9uZXh0Lm1hcCIsd29ya3Nw
+YWNlX2luZGV4PTN9LHtsb2NhdGlvbj0ic2Z4LzAuc2Z4Iix3b3Jrc3BhY2VfaW5kZXg9NH0se2xv
+Y2F0aW9uPSJtYWluLmx1YSMxIix3b3Jrc3BhY2VfaW5kZXg9OH0se2xvY2F0aW9uPSJlbnRpdHkv
+ZW5lbWllcy9CbG9iLmx1YSMxIix3b3Jrc3BhY2VfaW5kZXg9OH0se2xvY2F0aW9uPSJlbnRpdHkv
+YmxvY2tzL0JvbWJCbG9jay5sdWEjMSIsd29ya3NwYWNlX2luZGV4PTh9LHtsb2NhdGlvbj0ibGli
+L0FuaW1hdGlvblNldC5sdWEjMSIsd29ya3NwYWNlX2luZGV4PTh9LHtsb2NhdGlvbj0ic2NlbmVz
+L3Rlc3QubHVhIzEiLHdvcmtzcGFjZV9pbmRleD04fSx7bG9jYXRpb249ImVudGl0eS9sYXZhL0xh
+dmEubHVhIzEiLHdvcmtzcGFjZV9pbmRleD04fSx7bG9jYXRpb249Imdsb2JhbHMubHVhIzI0Iix3
+b3Jrc3BhY2VfaW5kZXg9OH0se2xvY2F0aW9uPSJlbnRpdHkvRXhpdC5sdWEjMSIsd29ya3NwYWNl
+X2luZGV4PTh9fV1d
+:: [eoc]
