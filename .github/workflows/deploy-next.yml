@@ -2,7 +2,7 @@ name: Deploy Next.JS Application
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   Build:
@@ -10,30 +10,30 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2
-        
+
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
           node-version: 12
-          
+
       - name: Npm Install
         run: npm ci
-        
+
       - name: Next Build
         run: npm run build
-      
+
       - name: Copy Important Files
         shell: bash
         run: (mv -f ./copy/* ./copy/.* ./out) || true
-      
+
       - name: Pushes build to Github Pages repo
         uses: pavletto/github-action-push-to-another-repository@test
         env:
-          SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN }}
         with:
-          exclude-directories: 'chip-8'
-          source-directory: 'out'
-          destination-github-username: 'svaught598'
-          destination-repository-name: 'svaught598.github.io'
+          exclude-directories: "chip-8"
+          source-directory: "out"
+          destination-github-username: "svaught598"
+          destination-repository-name: "svaught598.github.io"
           user-email: svaught598@gmail.com
           target-branch: master
